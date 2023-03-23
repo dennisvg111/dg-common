@@ -71,7 +71,7 @@ namespace DG.Common
 
         public override int GetHashCode()
         {
-            return _value.GetHashCode();
+            return _value;
         }
 
         private static int CombineHashCodes(int h1, int h2)
