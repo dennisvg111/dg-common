@@ -13,7 +13,7 @@
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <RepositoryUrl>https://github.com/dennisvg111/dg-common</RepositoryUrl>
     <Deterministic>false</Deterministic>
-    <PackageId>Dennivsg.$(AssemblyName)</PackageId>
+    <PackageId>Dennisvg.$(AssemblyName)</PackageId>
     <Company>$(AssemblyName)</Company>
     <GenerateDocumentationFile>True</GenerateDocumentationFile>
     <Authors>dennisvg111</Authors>
