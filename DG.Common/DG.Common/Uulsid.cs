@@ -10,7 +10,6 @@ namespace DG.Common
     /// </summary>
     public class Uulsid : IComparable, IComparable<Uulsid>, IEquatable<Uulsid>
     {
-
         private static long _lastUsedTimeStamp;
         private static readonly object _lock = new object();
 
