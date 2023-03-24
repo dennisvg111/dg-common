@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Security.Cryptography;
 
 namespace DG.Common
@@ -8,75 +10,27 @@ namespace DG.Common
     /// </summary>
     public class Uulsid : IComparable, IComparable<Uulsid>, IEquatable<Uulsid>
     {
-        /// <summary>
-        /// Crockford's Base32. This alphabet excludes the letters I, L, O, and U to avoid confusion.
-        /// </summary>
-        private static readonly char[] _base32Characters = new[] { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'j', 'k', 'm', 'n', 'p', 'q', 'r', 's', 't', 'v', 'w', 'x', 'y', 'z' };
-        private static readonly DateTime _epoch = new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc);
-
-        private const int _timestampBytes = 6;
-        private const int _randomnessBytes = 10;
-        private const int _dataLength = _timestampBytes + _randomnessBytes;
 
         private static long _lastUsedTimeStamp;
-        private static readonly byte[] _lastUsedRandomness = new byte[_randomnessBytes];
-
         private static readonly object _lock = new object();
 
-        public byte TimeStamp_0 { get; set; }
-        public byte TimeStamp_1 { get; set; }
-        public byte TimeStamp_2 { get; set; }
-        public byte TimeStamp_3 { get; set; }
-        public byte TimeStamp_4 { get; set; }
-        public byte TimeStamp_5 { get; set; }
+        private readonly Timestamp _timestampBytes;
+        private readonly RandomBytes _randomBytes;
 
-        public long TimeStamp
-        {
-            get
-            {
-                return new TimestampHelper(new byte[] { TimeStamp_0, TimeStamp_1, TimeStamp_2, TimeStamp_3, TimeStamp_4, TimeStamp_5 }).TimeStamp;
-            }
-        }
-
+        /// <summary>
+        /// Gets the Date part (UTC) of this <see cref="Uulsid"/>.
+        /// </summary>
+        /// <returns></returns>
         public DateTime GetAsDate()
         {
-            return _epoch.AddMilliseconds(TimeStamp);
+            return _timestampBytes.GetAsDate();
         }
 
-        public byte Randomness_0 { get; set; }
-        public byte Randomness_1 { get; set; }
-        public byte Randomness_2 { get; set; }
-        public byte Randomness_3 { get; set; }
-        public byte Randomness_4 { get; set; }
-        public byte Randomness_5 { get; set; }
-        public byte Randomness_6 { get; set; }
-        public byte Randomness_7 { get; set; }
-        public byte Randomness_8 { get; set; }
-        public byte Randomness_9 { get; set; }
-
-        private Uulsid(TimestampHelper timestamp, byte[] randomness)
+        private Uulsid(Timestamp timestamp, RandomBytes randomness)
         {
-            if (randomness.Length != _randomnessBytes)
-            {
-                throw new ArgumentException($"Expected a length of {_randomnessBytes}, received {randomness.Length}", nameof(randomness));
-            }
 
-            TimeStamp_0 = timestamp.TimeStamp_0;
-            TimeStamp_1 = timestamp.TimeStamp_1;
-            TimeStamp_2 = timestamp.TimeStamp_2;
-            TimeStamp_3 = timestamp.TimeStamp_3;
-            TimeStamp_4 = timestamp.TimeStamp_4;
-            TimeStamp_5 = timestamp.TimeStamp_5;
-            Randomness_0 = randomness[0];
-            Randomness_1 = randomness[1];
-            Randomness_2 = randomness[2];
-            Randomness_3 = randomness[3];
-            Randomness_4 = randomness[4];
-            Randomness_5 = randomness[5];
-            Randomness_6 = randomness[6];
-            Randomness_7 = randomness[7];
-            Randomness_8 = randomness[8];
-            Randomness_9 = randomness[9];
+            _timestampBytes = timestamp;
+            _randomBytes = randomness;
         }
 
         public static Uulsid NewUulsid()
@@ -84,42 +38,27 @@ namespace DG.Common
             lock (_lock)
             {
                 DateTime now = DateTime.UtcNow;
-                long timestamp = (long)(now - _epoch).TotalMilliseconds;
-
-                bool isTimestampSameAsLast = timestamp == _lastUsedTimeStamp;
-                if (!isTimestampSameAsLast)
-                {
-                    _lastUsedTimeStamp = timestamp;
-                }
-                byte[] randomBytes = GetNewRandomBytes(isTimestampSameAsLast);
-                randomBytes.CopyTo(_lastUsedRandomness, 0);
-                return new Uulsid(new TimestampHelper(timestamp), randomBytes);
+                long timestamp = (long)(now - Timestamp._epoch).TotalMilliseconds;
+                return NewUulsidForTimestamp(timestamp);
             }
         }
 
-        private static byte[] GetNewRandomBytes(bool isTimestampSameAsLast)
+        public static Uulsid NewUulsidForDate(DateTime date)
         {
-            byte[] bytes = new byte[_lastUsedRandomness.Length];
+            date = date.ToUniversalTime();
+            long timestamp = (long)(date - Timestamp._epoch).TotalMilliseconds;
+            return NewUulsidForTimestamp(timestamp);
+        }
+
+        private static Uulsid NewUulsidForTimestamp(long timestamp)
+        {
+            bool isTimestampSameAsLast = timestamp == _lastUsedTimeStamp;
             if (!isTimestampSameAsLast)
             {
-                using (var rng = new RNGCryptoServiceProvider())
-                {
-                    rng.GetBytes(bytes);
-                }
-                return bytes;
+                _lastUsedTimeStamp = timestamp;
             }
-
-            _lastUsedRandomness.CopyTo(bytes, 0);
-            for (int index = bytes.Length - 1; index >= 0; index--)
-            {
-                if (bytes[index] < byte.MaxValue)
-                {
-                    ++bytes[index];
-                    return bytes;
-                }
-                bytes[index] = 0;
-            }
-            return bytes;
+            RandomBytes randomBytes = RandomBytes.GetNewRandomBytes(isTimestampSameAsLast);
+            return new Uulsid(new Timestamp(timestamp), randomBytes);
         }
 
         /// <summary>
@@ -128,62 +67,21 @@ namespace DG.Common
         /// <returns></returns>
         public override string ToString()
         {
-            var uulsidCharIndexes = new StringHelper(this);
-            var stringChars = new char[StringHelper.TOTAL_LENGTH + 1];
-            int i = 0;
-            for (; i < StringHelper.TIMESTAMP_LENGTH; i++)
+            var base32Timestamp = Base32.From(_timestampBytes);
+            var base32Randomness = Base32.From(_randomBytes);
+            var stringChars = new char[base32Timestamp.Length + base32Randomness.Length + 1];
+            for (int i = 0; i < base32Timestamp.Length; i++)
             {
-                stringChars[i] = _base32Characters[uulsidCharIndexes[i]];
+                stringChars[i] = CrockfordBase32Characters.GetCharacter(base32Timestamp[i]);
             }
-            stringChars[StringHelper.TIMESTAMP_LENGTH] = '-';
-            for (i = StringHelper.TIMESTAMP_LENGTH; i < StringHelper.TOTAL_LENGTH; i++)
+            int offset = base32Timestamp.Length;
+            stringChars[offset] = CrockfordBase32Characters.DelimiterCharacter;
+            offset++;
+            for (int i = 0; i < base32Randomness.Length; i++)
             {
-                stringChars[i + 1] = _base32Characters[uulsidCharIndexes[i]];
+                stringChars[i + offset] = CrockfordBase32Characters.GetCharacter(base32Randomness[i]);
             }
             return new string(stringChars);
-        }
-
-        public static bool TryParse(string input, out Uulsid uulsid)
-        {
-            if (input.Length != StringHelper.TOTAL_LENGTH && input.Length != StringHelper.TOTAL_LENGTH + 1)
-            {
-                uulsid = default(Uulsid);
-                return false;
-            }
-            int[] index = new int[StringHelper.TOTAL_LENGTH];
-
-            int i = 0;
-            int inputOffset = 0;
-            do
-            {
-                char c = char.ToLowerInvariant(input[i + inputOffset]);
-                if (c == '-')
-                {
-                    inputOffset++;
-                    continue;
-                }
-                bool found = false;
-
-                for (int v = 0; v < _base32Characters.Length; ++v)
-                {
-                    if (_base32Characters[v] == c)
-                    {
-                        index[i] = v;
-                        found = true;
-                        break;
-                    }
-                }
-
-                if (!found)
-                {
-                    uulsid = default(Uulsid);
-                    return false;
-                }
-                i++;
-            } while (i + inputOffset < input.Length);
-
-            uulsid = StringHelper.FromString(index);
-            return true;
         }
 
         public Uulsid Parse(string input)
@@ -196,27 +94,58 @@ namespace DG.Common
             return result;
         }
 
-        #region Equality and comparison functions
-        public bool Equals(Uulsid other)
+        public static bool TryParse(string input, out Uulsid uulsid)
         {
-            return this.TimeStamp_0 == other.TimeStamp_0
-                && this.TimeStamp_1 == other.TimeStamp_1
-                && this.TimeStamp_2 == other.TimeStamp_2
-                && this.TimeStamp_3 == other.TimeStamp_3
-                && this.TimeStamp_4 == other.TimeStamp_4
-                && this.TimeStamp_5 == other.TimeStamp_5
-                && this.Randomness_0 == other.Randomness_0
-                && this.Randomness_1 == other.Randomness_1
-                && this.Randomness_2 == other.Randomness_2
-                && this.Randomness_3 == other.Randomness_3
-                && this.Randomness_4 == other.Randomness_4
-                && this.Randomness_5 == other.Randomness_5
-                && this.Randomness_6 == other.Randomness_6
-                && this.Randomness_7 == other.Randomness_7
-                && this.Randomness_8 == other.Randomness_8
-                && this.Randomness_9 == other.Randomness_9;
+            uulsid = default(Uulsid);
+            if (string.IsNullOrEmpty(input))
+            {
+                return false;
+            }
+            if (!TryGetBase32FromString(input, out int[] base32))
+            {
+                return false;
+            }
+            uulsid = Base32.ConvertToUulsid(base32);
+            return true;
         }
 
+        private static bool TryGetBase32FromString(string input, out int[] base32)
+        {
+            base32 = new int[Base32.TimestampLength + Base32.RandomnessLength];
+            int i = 0;
+            int inputOffset = 0;
+            do
+            {
+                char c = char.ToLowerInvariant(input[i + inputOffset]);
+                if (c == CrockfordBase32Characters.DelimiterCharacter)
+                {
+                    inputOffset++;
+                    continue;
+                }
+                if (!CrockfordBase32Characters.TryGetBase32Value(c, out int base32Value))
+                {
+                    return false;
+                }
+                if (i >= base32.Length)
+                {
+                    return false;
+                }
+                base32[i] = base32Value;
+                i++;
+            } while (i + inputOffset < input.Length);
+            return true;
+        }
+
+        #region Equality and comparison functions
+
+        /// <inheritdoc/>
+        public bool Equals(Uulsid other)
+        {
+            return _timestampBytes.Equals(other._timestampBytes)
+                && _randomBytes.Equals(other._randomBytes);
+        }
+
+        /// <inheritdoc/>
         public override bool Equals(object obj)
         {
             if (!(obj is Uulsid))
@@ -226,30 +155,40 @@ namespace DG.Common
             return Equals((Uulsid)obj);
         }
 
+        /// <summary>
+        /// Returns a value indicating if the two Uulsids are equal.
+        /// </summary>
+        /// <param name="left"></param>
+        /// <param name="right"></param>
+        /// <returns></returns>
         public static bool operator ==(Uulsid left, Uulsid right)
         {
             return left.Equals(right);
         }
 
+        /// <summary>
+        /// Returns a value indicating if the two Uulsids are not equal.
+        /// </summary>
+        /// <param name="left"></param>
+        /// <param name="right"></param>
+        /// <returns></returns>
         public static bool operator !=(Uulsid left, Uulsid right)
         {
             return !(left == right);
         }
 
+        /// <inheritdoc/>
         public int CompareTo(Uulsid other)
         {
-            int result = 0, index = 0;
-            var thisHelper = new StringHelper(this);
-            var otherHelper = new StringHelper(other);
-            while (result == 0 && index < StringHelper.TOTAL_LENGTH)
+            var result = _timestampBytes.CompareTo(other._timestampBytes);
+            if (result != 0)
             {
-                result = thisHelper[index].CompareTo(otherHelper[index]);
-                ++index;
+                return result;
             }
-
-            return result;
+            return _randomBytes.CompareTo(other._randomBytes);
         }
 
+        /// <inheritdoc/>
         public int CompareTo(object obj)
         {
             if (!(obj is Uulsid))
@@ -259,29 +198,19 @@ namespace DG.Common
             return CompareTo((Uulsid)obj);
         }
 
+        /// <inheritdoc/>
         public override int GetHashCode()
         {
-            return HashCode.Of(TimeStamp_0)
-                .And(TimeStamp_1)
-                .And(TimeStamp_2)
-                .And(TimeStamp_3)
-                .And(TimeStamp_4)
-                .And(TimeStamp_5)
-                .And(Randomness_0)
-                .And(Randomness_1)
-                .And(Randomness_2)
-                .And(Randomness_3)
-                .And(Randomness_4)
-                .And(Randomness_5)
-                .And(Randomness_6)
-                .And(Randomness_7)
-                .And(Randomness_8)
-                .And(Randomness_9);
+            return HashCode.Of(_timestampBytes)
+                .And(_randomBytes);
         }
         #endregion
 
-        private struct TimestampHelper
+        private sealed class Timestamp : IEquatable<Timestamp>, IComparable<Timestamp>
         {
+            public static readonly DateTime _epoch = new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc);
+            public const int TimestampByteCount = 6;
+
             private const long _mask0 = 280375465082880;
             private const long _mask1 = 1095216660480;
             private const long _mask2 = 4278190080;
@@ -289,7 +218,7 @@ namespace DG.Common
             private const long _mask4 = 65280;
             private const long _mask5 = 255;
 
-            public TimestampHelper(long timeStamp)
+            public Timestamp(long timeStamp)
             {
                 TimeStamp_0 = (byte)((timeStamp & _mask0) >> 40);
                 TimeStamp_1 = (byte)((timeStamp & _mask1) >> 32);
@@ -299,11 +228,11 @@ namespace DG.Common
                 TimeStamp_5 = (byte)((timeStamp & _mask5) >> 0);
             }
 
-            public TimestampHelper(byte[] timestamp)
+            public Timestamp(byte[] timestamp)
             {
-                if (timestamp.Length != _timestampBytes)
+                if (timestamp.Length != TimestampByteCount)
                 {
-                    throw new ArgumentException($"Expected a length of {_timestampBytes}, received {timestamp.Length}", nameof(timestamp));
+                    throw new ArgumentException($"Expected a length of {TimestampByteCount}, received {timestamp.Length}", nameof(timestamp));
                 }
 
                 TimeStamp_0 = timestamp[0];
@@ -321,7 +250,7 @@ namespace DG.Common
             public byte TimeStamp_4 { get; }
             public byte TimeStamp_5 { get; }
 
-            public long TimeStamp
+            public long MillisecondsSinceEpoch
             {
                 get
                 {
@@ -332,119 +261,271 @@ namespace DG.Common
                     long t4 = TimeStamp_4;
                     long t5 = TimeStamp_5;
 
-                    return (t0 << 40)
-                        | (t1 << 32)
-                        | (t2 << 24)
-                        | (t3 << 16)
-                        | (t4 << 8)
-                        | (t5);
+                    return (t0 << 40) | (t1 << 32) | (t2 << 24) | (t3 << 16) | (t4 << 8) | (t5);
                 }
+            }
+
+            public DateTime GetAsDate()
+            {
+                return _epoch.AddMilliseconds(MillisecondsSinceEpoch);
+            }
+
+            public bool Equals(Timestamp other)
+            {
+                return TimeStamp_0 == other.TimeStamp_0
+                && TimeStamp_1 == other.TimeStamp_1
+                && TimeStamp_2 == other.TimeStamp_2
+                && TimeStamp_3 == other.TimeStamp_3
+                && TimeStamp_4 == other.TimeStamp_4
+                && TimeStamp_5 == other.TimeStamp_5;
+            }
+
+            public override bool Equals(object obj)
+            {
+                if (!(obj is Timestamp))
+                {
+                    return false;
+                }
+                return Equals((Timestamp)obj);
+            }
+
+            public override int GetHashCode()
+            {
+                return HashCode.Of(TimeStamp_0)
+                .And(TimeStamp_1)
+                .And(TimeStamp_2)
+                .And(TimeStamp_3)
+                .And(TimeStamp_4)
+                .And(TimeStamp_5);
+            }
+
+            public int CompareTo(Timestamp other)
+            {
+                return MillisecondsSinceEpoch.CompareTo(other.MillisecondsSinceEpoch);
             }
         }
 
-        private struct StringHelper
+        private sealed class RandomBytes : IEquatable<RandomBytes>, IComparable<RandomBytes>
         {
-            public const int TIMESTAMP_LENGTH = 10;
-            public const int RANDOMNESS_LENGTH = 16;
-            public const int TOTAL_LENGTH = TIMESTAMP_LENGTH + RANDOMNESS_LENGTH;
-            public StringHelper(Uulsid value)
+            public const int RandomByteCount = 10;
+
+            private static readonly byte[] _lastUsedRandomBytes = new byte[RandomByteCount];
+
+            public RandomBytes(byte[] randomness)
             {
-                Value = value;
+                if (randomness.Length != RandomByteCount)
+                {
+                    throw new ArgumentException($"Expected a length of {RandomByteCount}, received {randomness.Length}", nameof(randomness));
+                }
+                Randomness_0 = randomness[0];
+                Randomness_1 = randomness[1];
+                Randomness_2 = randomness[2];
+                Randomness_3 = randomness[3];
+                Randomness_4 = randomness[4];
+                Randomness_5 = randomness[5];
+                Randomness_6 = randomness[6];
+                Randomness_7 = randomness[7];
+                Randomness_8 = randomness[8];
+                Randomness_9 = randomness[9];
             }
 
-            private Uulsid Value { get; }
+            public byte Randomness_0 { get; }
+            public byte Randomness_1 { get; }
+            public byte Randomness_2 { get; }
+            public byte Randomness_3 { get; }
+            public byte Randomness_4 { get; }
+            public byte Randomness_5 { get; }
+            public byte Randomness_6 { get; }
+            public byte Randomness_7 { get; }
+            public byte Randomness_8 { get; }
+            public byte Randomness_9 { get; }
 
-            public int this[int index]
+            /// <summary>
+            /// Creates a new instance of <see cref="RandomBytes"/>, with new byte values.
+            /// </summary>
+            /// <param name="keepSeed">Indicates if the random bytes should continue with the same seed as last time.</param>
+            /// <returns></returns>
+            public static RandomBytes GetNewRandomBytes(bool keepSeed)
             {
-                get
+                if (keepSeed)
                 {
-                    switch (index)
+                    IncrementByteArray(_lastUsedRandomBytes);
+                    return new RandomBytes(_lastUsedRandomBytes);
+                }
+                using (var rng = new RNGCryptoServiceProvider())
+                {
+                    rng.GetBytes(_lastUsedRandomBytes);
+                }
+                return new RandomBytes(_lastUsedRandomBytes);
+            }
+
+            private static void IncrementByteArray(byte[] bytes)
+            {
+                for (int index = bytes.Length - 1; index >= 0; index--)
+                {
+                    if (bytes[index] < byte.MaxValue)
                     {
-                        case 0:
-                            return (Value.TimeStamp_0 & 224) >> 5;
-                        case 1:
-                            return Value.TimeStamp_0 & 31;
-                        case 2:
-                            return (Value.TimeStamp_1 & 248) >> 3;
-                        case 3:
-                            return ((Value.TimeStamp_1 & 7) << 2) | ((Value.TimeStamp_2 & 192) >> 6);
-                        case 4:
-                            return (Value.TimeStamp_2 & 62) >> 1;
-                        case 5:
-                            return ((Value.TimeStamp_2 & 1) << 4) | ((Value.TimeStamp_3 & 240) >> 4);
-                        case 6:
-                            return ((Value.TimeStamp_3 & 15) << 1) | ((Value.TimeStamp_4 & 128) >> 7);
-                        case 7:
-                            return (Value.TimeStamp_4 & 124) >> 2;
-                        case 8:
-                            return ((Value.TimeStamp_4 & 3) << 3) | ((Value.TimeStamp_5 & 224) >> 5);
-                        case 9:
-                            return Value.TimeStamp_5 & 31;
-                        case 10:
-                            return (Value.Randomness_0 & 248) >> 3;
-                        case 11:
-                            return ((Value.Randomness_0 & 7) << 2) | ((Value.Randomness_1 & 192) >> 6);
-                        case 12:
-                            return (Value.Randomness_1 & 62) >> 1;
-                        case 13:
-                            return ((Value.Randomness_1 & 1) << 4) | ((Value.Randomness_2 & 240) >> 4);
-                        case 14:
-                            return ((Value.Randomness_2 & 15) << 1) | ((Value.Randomness_3 & 128) >> 7);
-                        case 15:
-                            return (Value.Randomness_3 & 124) >> 2;
-                        case 16:
-                            return ((Value.Randomness_3 & 3) << 3) | ((Value.Randomness_4 & 224) >> 5);
-                        case 17:
-                            return Value.Randomness_4 & 31;
-                        case 18:
-                            return (Value.Randomness_5 & 248) >> 3;
-                        case 19:
-                            return ((Value.Randomness_5 & 7) << 2) | ((Value.Randomness_6 & 192) >> 6);
-                        case 20:
-                            return (Value.Randomness_6 & 62) >> 1;
-                        case 21:
-                            return ((Value.Randomness_6 & 1) << 4) | ((Value.Randomness_7 & 240) >> 4);
-                        case 22:
-                            return ((Value.Randomness_7 & 15) << 1) | ((Value.Randomness_8 & 128) >> 7);
-                        case 23:
-                            return (Value.Randomness_8 & 124) >> 2;
-                        case 24:
-                            return ((Value.Randomness_8 & 3) << 3) | ((Value.Randomness_9 & 224) >> 5);
-                        case 25:
-                            return Value.Randomness_9 & 31;
-                        default:
-                            throw new ArgumentOutOfRangeException(nameof(index));
+                        ++bytes[index];
+                        return;
                     }
+                    bytes[index] = 0;
                 }
             }
 
-            public static Uulsid FromString(int[] index)
+            public int CompareTo(RandomBytes other)
             {
-                return new Uulsid(
-                    new TimestampHelper(
-                        new byte[]
-                        {
-                            (byte)(index[0] << 5 | index[1]),
-                            (byte)(index[2] << 3 | index[3] >> 2),
-                            (byte)(index[3] << 6 | index[4] << 1 | index[5] >> 4),
-                            (byte)(index[5] << 4 | index[6] >> 1),
-                            (byte)(index[6] << 7 | index[7] << 2 | index[8] >> 3),
-                            (byte)(index[8] << 5 | index[9])
-                        }),
-                    new byte[]
+                var thisBase32 = Base32.From(this);
+                var otherBase32 = Base32.From(other);
+                for (int i = 0; i < thisBase32.Length; i++)
+                {
+                    if (thisBase32[i] == otherBase32[i])
                     {
-                        (byte)(index[10] << 3 | index[11] >> 2),
-                        (byte)(index[11] << 6 | index[12] << 1 | index[13] >> 4),
-                        (byte)(index[13] << 4 | index[14] >> 1),
-                        (byte)(index[14] << 7 | index[15] << 2 | index[16] >> 3),
-                        (byte)(index[16] << 5 | index[17]),
-                        (byte)(index[18] << 3 | index[19] >> 2),
-                        (byte)(index[19] << 6 | index[20] << 1 | index[21] >> 4),
-                        (byte)(index[21] << 4 | index[22] >> 1),
-                        (byte)(index[22] << 7 | index[23] << 2 | index[24] >> 3),
-                        (byte)(index[24] << 5 | index[25]),
+                        continue;
                     }
-                );
+                    return thisBase32[i] < otherBase32[i] ? -1 : 1;
+                }
+                return 0;
+            }
+
+            public bool Equals(RandomBytes other)
+            {
+                return Randomness_0 == other.Randomness_0
+                && Randomness_1 == other.Randomness_1
+                && Randomness_2 == other.Randomness_2
+                && Randomness_3 == other.Randomness_3
+                && Randomness_4 == other.Randomness_4
+                && Randomness_5 == other.Randomness_5
+                && Randomness_6 == other.Randomness_6
+                && Randomness_7 == other.Randomness_7
+                && Randomness_8 == other.Randomness_8
+                && Randomness_9 == other.Randomness_9;
+            }
+
+            public override bool Equals(object obj)
+            {
+                if (!(obj is RandomBytes))
+                {
+                    return false;
+                }
+                return Equals((RandomBytes)obj);
+            }
+
+            public override int GetHashCode()
+            {
+                return HashCode.Of(Randomness_0)
+                .And(Randomness_1)
+                .And(Randomness_2)
+                .And(Randomness_3)
+                .And(Randomness_4)
+                .And(Randomness_5)
+                .And(Randomness_6)
+                .And(Randomness_7)
+                .And(Randomness_8)
+                .And(Randomness_9);
+            }
+        }
+
+        private static class CrockfordBase32Characters
+        {
+            public const char DelimiterCharacter = '-';
+
+            /// <summary>
+            /// Crockford's Base32. This alphabet excludes the letters I, L, O, and U to avoid confusion.
+            /// </summary>
+            public static readonly char[] _base32Characters = new[] { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'j', 'k', 'm', 'n', 'p', 'q', 'r', 's', 't', 'v', 'w', 'x', 'y', 'z' };
+
+            public static readonly Dictionary<char, int> _characterIndex;
+
+            static CrockfordBase32Characters()
+            {
+                _characterIndex = Enumerable.Range(0, _base32Characters.Length).ToDictionary(i => _base32Characters[i]);
+            }
+
+            public static char GetCharacter(int base32Value)
+            {
+                return _base32Characters[base32Value];
+            }
+
+            public static bool TryGetBase32Value(char character, out int base32Value)
+            {
+                return _characterIndex.TryGetValue(character, out base32Value);
+            }
+        }
+
+        private static class Base32
+        {
+            public const int TimestampLength = 10;
+            public const int RandomnessLength = 16;
+
+            public static int[] From(Timestamp timestamp)
+            {
+                return GetBase32ForTimestamp(timestamp).ToArray();
+            }
+
+            public static int[] From(RandomBytes randomBytes)
+            {
+                return GetBase32ForRandomness(randomBytes).ToArray();
+            }
+
+            private static IEnumerable<int> GetBase32ForTimestamp(Timestamp timestamp)
+            {
+                yield return (timestamp.TimeStamp_0 & 224) >> 5;
+                yield return timestamp.TimeStamp_0 & 31;
+                yield return (timestamp.TimeStamp_1 & 248) >> 3;
+                yield return ((timestamp.TimeStamp_1 & 7) << 2) | ((timestamp.TimeStamp_2 & 192) >> 6);
+                yield return (timestamp.TimeStamp_2 & 62) >> 1;
+                yield return ((timestamp.TimeStamp_2 & 1) << 4) | ((timestamp.TimeStamp_3 & 240) >> 4);
+                yield return ((timestamp.TimeStamp_3 & 15) << 1) | ((timestamp.TimeStamp_4 & 128) >> 7);
+                yield return (timestamp.TimeStamp_4 & 124) >> 2;
+                yield return ((timestamp.TimeStamp_4 & 3) << 3) | ((timestamp.TimeStamp_5 & 224) >> 5);
+                yield return timestamp.TimeStamp_5 & 31;
+            }
+
+            private static IEnumerable<int> GetBase32ForRandomness(RandomBytes randomBytes)
+            {
+                yield return (randomBytes.Randomness_0 & 248) >> 3;
+                yield return ((randomBytes.Randomness_0 & 7) << 2) | ((randomBytes.Randomness_1 & 192) >> 6);
+                yield return (randomBytes.Randomness_1 & 62) >> 1;
+                yield return ((randomBytes.Randomness_1 & 1) << 4) | ((randomBytes.Randomness_2 & 240) >> 4);
+                yield return ((randomBytes.Randomness_2 & 15) << 1) | ((randomBytes.Randomness_3 & 128) >> 7);
+                yield return (randomBytes.Randomness_3 & 124) >> 2;
+                yield return ((randomBytes.Randomness_3 & 3) << 3) | ((randomBytes.Randomness_4 & 224) >> 5);
+                yield return randomBytes.Randomness_4 & 31;
+                yield return (randomBytes.Randomness_5 & 248) >> 3;
+                yield return ((randomBytes.Randomness_5 & 7) << 2) | ((randomBytes.Randomness_6 & 192) >> 6);
+                yield return (randomBytes.Randomness_6 & 62) >> 1;
+                yield return ((randomBytes.Randomness_6 & 1) << 4) | ((randomBytes.Randomness_7 & 240) >> 4);
+                yield return ((randomBytes.Randomness_7 & 15) << 1) | ((randomBytes.Randomness_8 & 128) >> 7);
+                yield return (randomBytes.Randomness_8 & 124) >> 2;
+                yield return ((randomBytes.Randomness_8 & 3) << 3) | ((randomBytes.Randomness_9 & 224) >> 5);
+                yield return randomBytes.Randomness_9 & 31;
+            }
+
+            public static Uulsid ConvertToUulsid(int[] base32)
+            {
+                var timestampBytes = new byte[]
+                {
+                    (byte)(base32[0] << 5 | base32[1]),
+                    (byte)(base32[2] << 3 | base32[3] >> 2),
+                    (byte)(base32[3] << 6 | base32[4] << 1 | base32[5] >> 4),
+                    (byte)(base32[5] << 4 | base32[6] >> 1),
+                    (byte)(base32[6] << 7 | base32[7] << 2 | base32[8] >> 3),
+                    (byte)(base32[8] << 5 | base32[9])
+                };
+                var randomBytes = new byte[]
+                {
+                    (byte)(base32[10] << 3 | base32[11] >> 2),
+                    (byte)(base32[11] << 6 | base32[12] << 1 | base32[13] >> 4),
+                    (byte)(base32[13] << 4 | base32[14] >> 1),
+                    (byte)(base32[14] << 7 | base32[15] << 2 | base32[16] >> 3),
+                    (byte)(base32[16] << 5 | base32[17]),
+                    (byte)(base32[18] << 3 | base32[19] >> 2),
+                    (byte)(base32[19] << 6 | base32[20] << 1 | base32[21] >> 4),
+                    (byte)(base32[21] << 4 | base32[22] >> 1),
+                    (byte)(base32[22] << 7 | base32[23] << 2 | base32[24] >> 3),
+                    (byte)(base32[24] << 5 | base32[25]),
+                };
+                return new Uulsid(new Timestamp(timestampBytes), new RandomBytes(randomBytes));
             }
         }
     }
