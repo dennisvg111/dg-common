@@ -136,8 +136,6 @@ namespace DG.Common
             return true;
         }
 
-        #region Equality and comparison functions
-
         /// <inheritdoc/>
         public bool Equals(Uulsid other)
         {
@@ -204,7 +202,6 @@ namespace DG.Common
             return HashCode.Of(_timestampBytes)
                 .And(_randomBytes);
         }
-        #endregion
 
         private sealed class Timestamp : IEquatable<Timestamp>, IComparable<Timestamp>
         {
