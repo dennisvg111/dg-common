@@ -74,7 +74,7 @@ namespace DG.Common
             return this[index];
         }
 
-        //instance managing logic
+        #region Instance managing logic
         private static readonly LockProvider _defaultInstance = new LockProvider();
         private static readonly ConcurrentDictionary<string, LockProvider> _namedInstances = new ConcurrentDictionary<string, LockProvider>();
 
@@ -92,5 +92,6 @@ namespace DG.Common
         {
             return _namedInstances.GetOrAdd(name, (n) => new LockProvider());
         }
+        #endregion
     }
 }
