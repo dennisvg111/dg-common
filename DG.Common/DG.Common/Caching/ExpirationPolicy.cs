@@ -6,7 +6,7 @@ namespace DG.Common.Caching
     /// <summary>
     /// Defines the expiration policy for a <see cref="TypedCache{T}"/>.
     /// </summary>
-    public class ExpirationPolicy
+    public sealed class ExpirationPolicy
     {
         private readonly TimeSpan? _slidingExpiration;
         private readonly TimeSpan? _maxSlidingExpiration;

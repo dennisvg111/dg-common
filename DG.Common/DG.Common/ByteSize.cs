@@ -57,45 +57,45 @@ namespace DG.Common
         /// <summary>
         /// <inheritdoc cref="FromBytes(long)"/>
         /// </summary>
-        /// <param name="mB"></param>
+        /// <param name="mb"></param>
         /// <param name="unitType"></param>
         /// <returns></returns>
-        public static ByteSize FromMB(double mB, UnitType unitType = UnitType.Binary)
+        public static ByteSize FromMB(double mb, UnitType unitType = UnitType.Binary)
         {
-            return new ByteSize(mB, unitType, _mebiByte, _megaByte);
+            return new ByteSize(mb, unitType, _mebiByte, _megaByte);
         }
 
         /// <summary>
         /// <inheritdoc cref="FromBytes(long)"/>
         /// </summary>
-        /// <param name="gB"></param>
+        /// <param name="gb"></param>
         /// <param name="unitType"></param>
         /// <returns></returns>
-        public static ByteSize FromGB(double gB, UnitType unitType = UnitType.Binary)
+        public static ByteSize FromGB(double gb, UnitType unitType = UnitType.Binary)
         {
-            return new ByteSize(gB, unitType, _gibiByte, _gigaByte);
+            return new ByteSize(gb, unitType, _gibiByte, _gigaByte);
         }
 
         /// <summary>
         /// <inheritdoc cref="FromBytes(long)"/>
         /// </summary>
-        /// <param name="tB"></param>
+        /// <param name="tb"></param>
         /// <param name="unitType"></param>
         /// <returns></returns>
-        public static ByteSize FromTB(double tB, UnitType unitType = UnitType.Binary)
+        public static ByteSize FromTB(double tb, UnitType unitType = UnitType.Binary)
         {
-            return new ByteSize(tB, unitType, _tebiByte, _teraByte);
+            return new ByteSize(tb, unitType, _tebiByte, _teraByte);
         }
 
         /// <summary>
         /// <inheritdoc cref="FromBytes(long)"/>
         /// </summary>
-        /// <param name="pB"></param>
+        /// <param name="pb"></param>
         /// <param name="unitType"></param>
         /// <returns></returns>
-        public static ByteSize FromPB(double pB, UnitType unitType = UnitType.Binary)
+        public static ByteSize FromPB(double pb, UnitType unitType = UnitType.Binary)
         {
-            return new ByteSize(pB, unitType, _pebiByte, _petaByte);
+            return new ByteSize(pb, unitType, _pebiByte, _petaByte);
         }
 
         /// <summary>
@@ -126,6 +126,72 @@ namespace DG.Common
         public ByteSize AddBytes(long bytes)
         {
             return new ByteSize(_byteCount + bytes);
+        }
+
+        /// <summary>
+        /// <inheritdoc cref="AddBytes(long)"/>
+        /// </summary>
+        /// <param name="kb"></param>
+        /// <param name="unitType"></param>
+        /// <returns></returns>
+        public ByteSize AddKB(double kb, UnitType unitType = UnitType.Binary)
+        {
+            return this + FromKB(kb, unitType);
+        }
+
+        /// <summary>
+        /// <inheritdoc cref="AddBytes(long)"/>
+        /// </summary>
+        /// <param name="mb"></param>
+        /// <param name="unitType"></param>
+        /// <returns></returns>
+        public ByteSize AddMB(double mb, UnitType unitType = UnitType.Binary)
+        {
+            return this + FromMB(mb, unitType);
+        }
+
+        /// <summary>
+        /// <inheritdoc cref="AddBytes(long)"/>
+        /// </summary>
+        /// <param name="gb"></param>
+        /// <param name="unitType"></param>
+        /// <returns></returns>
+        public ByteSize AddGB(double gb, UnitType unitType = UnitType.Binary)
+        {
+            return this + FromGB(gb, unitType);
+        }
+
+        /// <summary>
+        /// <inheritdoc cref="AddBytes(long)"/>
+        /// </summary>
+        /// <param name="tb"></param>
+        /// <param name="unitType"></param>
+        /// <returns></returns>
+        public ByteSize AddTB(double tb, UnitType unitType = UnitType.Binary)
+        {
+            return this + FromTB(tb, unitType);
+        }
+
+        /// <summary>
+        /// <inheritdoc cref="AddBytes(long)"/>
+        /// </summary>
+        /// <param name="pb"></param>
+        /// <param name="unitType"></param>
+        /// <returns></returns>
+        public ByteSize AddPB(double pb, UnitType unitType = UnitType.Binary)
+        {
+            return this + FromPB(pb, unitType);
+        }
+
+        /// <summary>
+        /// <inheritdoc cref="AddBytes(long)"/>
+        /// </summary>
+        /// <param name="left"></param>
+        /// <param name="right"></param>
+        /// <returns></returns>
+        public static ByteSize operator +(ByteSize left, ByteSize right)
+        {
+            return new ByteSize(left._byteCount + right._byteCount);
         }
 
         /// <summary>

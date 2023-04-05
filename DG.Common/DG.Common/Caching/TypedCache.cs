@@ -10,7 +10,7 @@ namespace DG.Common.Caching
     /// Note that this cache is shared with other instances of <see cref="TypedCache{T}"/> with the same type <typeparamref name="T"/>, unless a specific <see cref="MemoryCache"/> is given.
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    public class TypedCache<T> where T : class
+    public sealed class TypedCache<T> where T : class
     {
         private readonly string _cachePrefix = $"TypedCache<{typeof(T).FullName}>";
 

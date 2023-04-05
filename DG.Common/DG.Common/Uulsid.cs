@@ -10,7 +10,7 @@ namespace DG.Common
     /// <para></para>
     /// The first bytes in this object indicate the creation time, to allow for lexicographical sorting. The other bytes are added for uniqueness.
     /// </summary>
-    public class Uulsid : IComparable, IComparable<Uulsid>, IEquatable<Uulsid>
+    public sealed class Uulsid : IComparable, IComparable<Uulsid>, IEquatable<Uulsid>
     {
         private static readonly object _lock = new object();
 
