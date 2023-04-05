@@ -1,4 +1,4 @@
-﻿using DG.Common.Locking;
+﻿using DG.Common.Threading;
 using System;
 using System.Runtime.Caching;
 
@@ -12,48 +12,28 @@ namespace DG.Common.Caching
     /// <typeparam name="T"></typeparam>
     public class TypedCache<T> where T : class
     {
+        private readonly string _cachePrefix = $"TypedCache<{typeof(T).FullName}>";
+
         private readonly MemoryCache _cache;
         private readonly LockProvider _locks;
-        private string cachePrefix => $"TypedCache<{typeof(T).FullName}>";
+        private readonly ExpirationPolicy _expiration;
 
         /// <summary>
-        /// The amount of minutes after a cache item has last been accessed after which it is removed from the cache.
+        /// Initializes a new <see cref="TypedCache{T}"/>, with the given <see cref="ExpirationPolicy"/>, using the default shared <see cref="MemoryCache"/>.
         /// </summary>
-        public int ExpirationMinutes { get; set; }
-        private TimeSpan Expiration { get { return TimeSpan.FromMinutes(ExpirationMinutes); } }
+        /// <param name="expirationPolicy"></param>
+        public TypedCache(ExpirationPolicy expirationPolicy) : this(expirationPolicy, MemoryCache.Default) { }
 
         /// <summary>
-        /// Initializes a new <see cref="TypedCache{T}"/>, with the given amount of minutes as initial value for <see cref="ExpirationMinutes"/>, using a default shared <see cref="MemoryCache"/>.
+        /// Initializes a new <see cref="TypedCache{T}"/>, with the given <see cref="ExpirationPolicy"/>, and the given <see cref="MemoryCache"/>.
         /// </summary>
-        /// <param name="expirationMinutes"></param>
-        public TypedCache(int expirationMinutes) : this(expirationMinutes, MemoryCache.Default)
-        {
-
-        }
-
-        /// <summary>
-        /// Initializes a new <see cref="TypedCache{T}"/>, with the given amount of minutes as initial value for <see cref="ExpirationMinutes"/>, and the given <see cref="MemoryCache"/>.
-        /// </summary>
-        /// <param name="expirationMinutes"></param>
+        /// <param name="expirationPolicy"></param>
         /// <param name="cache"></param>
-        public TypedCache(int expirationMinutes, MemoryCache cache)
+        public TypedCache(ExpirationPolicy expirationPolicy, MemoryCache cache)
         {
             _cache = cache;
-            _locks = LockProvider.ByName(cachePrefix);
-            ExpirationMinutes = expirationMinutes;
-            if (ExpirationMinutes <= 0)
-            {
-                ExpirationMinutes = 30;
-            }
-        }
-
-        /// <summary>
-        /// Initializes a new <see cref="TypedCache{T}"/>, with the given amount of minutes as initial value for <see cref="ExpirationMinutes"/>, and the given <see cref="MemoryCache"/>.
-        /// </summary>
-        /// <param name="expirationMinutes"></param>
-        /// <param name="cacheName"></param>
-        public TypedCache(int expirationMinutes, string cacheName) : this(expirationMinutes, new MemoryCache(cacheName))
-        {
+            _locks = LockProvider.ByName(_cachePrefix);
+            _expiration = expirationPolicy;
         }
 
         /// <summary>
@@ -65,7 +45,7 @@ namespace DG.Common.Caching
         {
             lock (_locks.DefaultLock)
             {
-                _cache.Add(cachePrefix + key, savedItem, new CacheItemPolicy { SlidingExpiration = Expiration });
+                _cache.Add(_cachePrefix + key, savedItem, _expiration.GetPolicy());
             }
         }
 
@@ -78,7 +58,7 @@ namespace DG.Common.Caching
         {
             lock (_locks.DefaultLock)
             {
-                return _cache[cachePrefix + key] as T;
+                return _cache[_cachePrefix + key] as T;
             }
         }
 
@@ -108,7 +88,7 @@ namespace DG.Common.Caching
         {
             lock (_locks.DefaultLock)
             {
-                _cache.Remove(cachePrefix + key);
+                _cache.Remove(_cachePrefix + key);
             }
         }
 
@@ -121,7 +101,7 @@ namespace DG.Common.Caching
         public bool TryGet(string key, out T value)
         {
             value = Get(key);
-            if (value == null && !Contains(key))
+            if (!Contains(key))
             {
                 return false;
             }
@@ -137,7 +117,7 @@ namespace DG.Common.Caching
         {
             lock (_locks.DefaultLock)
             {
-                return _cache.Contains(cachePrefix + key);
+                return _cache.Contains(_cachePrefix + key);
             }
         }
     }

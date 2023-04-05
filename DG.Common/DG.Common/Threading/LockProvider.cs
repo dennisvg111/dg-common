@@ -1,6 +1,6 @@
 ﻿using System.Collections.Concurrent;
 
-namespace DG.Common.Locking
+namespace DG.Common.Threading
 {
     /// <summary>
     /// This class provides functionality to create and reuse objects to lock on, threadsafe.
