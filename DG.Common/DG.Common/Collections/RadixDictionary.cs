@@ -342,13 +342,13 @@ namespace DG.Common.Collections
             private void Split(int length, string key, T value)
             {
                 var newParent = new RadixNode(this, _key.Substring(length), Value);
-                MoveChildrenTo(newParent);
+                EvictChildrenTo(newParent);
                 _children.Add(newParent);
                 _children.Add(new RadixNode(this, key.Substring(length), value));
                 _key = key.Substring(0, length);
             }
 
-            private void MoveChildrenTo(RadixNode newParent)
+            private void EvictChildrenTo(RadixNode newParent)
             {
                 foreach (var child in _children)
                 {
