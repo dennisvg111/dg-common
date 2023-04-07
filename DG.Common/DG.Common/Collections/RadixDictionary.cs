@@ -6,7 +6,7 @@ using System.Linq;
 namespace DG.Common.Collections
 {
     /// <summary>
-    /// Represents a collection of key/value pairs that is optemized for accessing through prefixes.
+    /// Represents a collection of key/value pairs that is optimized for accessing through prefixes.
     /// </summary>
     /// <typeparam name="T"></typeparam>
     public sealed class RadixDictionary<T> : IReadOnlyDictionary<string, T>
