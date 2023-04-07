@@ -5,7 +5,7 @@ using System.Collections.Generic;
 namespace DG.Common.Caching
 {
     /// <summary>
-    /// An implementation of <see cref="IEnumerable{T}"/> that caches ever item upon first enumeration.
+    /// An implementation of <see cref="IEnumerable{T}"/> that caches every item upon first enumeration.
     /// </summary>
     /// <typeparam name="T"></typeparam>
     public class CachedEnumerable<T> : IEnumerable<T>, IDisposable
