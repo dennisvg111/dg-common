@@ -114,17 +114,6 @@ namespace DG.Common
             return Equals((HashCode)obj);
         }
 
-        /// <summary>
-        /// Returns the hashcode for this instance.
-        /// <para></para>
-        /// Note that it is not needed to call this method manually, as <see cref="HashCode"/> can be implicitly converted to an <see cref="int"/>.
-        /// </summary>
-        /// <returns></returns>
-        public override int GetHashCode()
-        {
-            return _value.GetHashCode();
-        }
-
         private static int CombineHashCodes(int h1, int h2)
         {
             unchecked
