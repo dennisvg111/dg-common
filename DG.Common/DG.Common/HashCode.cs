@@ -122,7 +122,7 @@ namespace DG.Common
         /// <returns></returns>
         public override int GetHashCode()
         {
-            return _value;
+            return _value.GetHashCode();
         }
 
         private static int CombineHashCodes(int h1, int h2)
