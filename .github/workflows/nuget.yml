@@ -28,7 +28,7 @@ jobs:
       - name: Build solution and generate NuGet package
         run: |  
           cd ./DG.Common/DG.Common/
-          dotnet pack -c Release -o out  
+          dotnet pack -c Release -o out -p:GeneratePackageOnBuild=false 
 
       - name: Push generated package to GitHub registry
         run: dotnet nuget push ./DG.Common/DG.Common/out/*.nupkg --skip-duplicate --no-symbols true
