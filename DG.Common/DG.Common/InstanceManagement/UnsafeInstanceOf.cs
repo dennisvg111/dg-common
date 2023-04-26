@@ -5,25 +5,22 @@ using System.Runtime.Serialization;
 namespace DG.Common.InstanceManagement
 {
     /// <summary>
-    /// Provides functionality to create uninitialized instances of a given type.
+    /// Provides functionality to create instances of a given type.
+    /// <para></para>
+    /// Note that these instances may be uninitialized if the type <typeparamref name="T"/> provides no default constructor.
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    public static class Uninitialized<T>
+    public static class UnsafeInstanceOf<T>
     {
-        private static readonly T _instance;
+        private static readonly Lazy<T> _instanceHolder = new Lazy<T>(() => New());
 
         /// <summary>
-        /// Returns an unitialized instance of the given type <typeparamref name="T"/>. Note that this always returns the same instance.
+        /// Returns a singleton instance of the given type <typeparamref name="T"/>.
         /// </summary>
-        public static T Instance => _instance;
-
-        static Uninitialized()
-        {
-            _instance = New();
-        }
+        public static T Shared => _instanceHolder.Value;
 
         /// <summary>
-        /// Returns a new unitialized instance of the given type <typeparamref name="T"/>.
+        /// Returns a new instance of the given type <typeparamref name="T"/>.
         /// </summary>
         /// <returns></returns>
         public static T New()
