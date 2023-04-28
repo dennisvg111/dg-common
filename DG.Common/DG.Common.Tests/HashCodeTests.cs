@@ -17,7 +17,7 @@ namespace DG.Common.Tests
         }
 
         [Fact]
-        public void GetHashcodeIsSameAsValue()
+        public void GetHashCode_SameAsValue()
         {
             string string1 = "test";
 
