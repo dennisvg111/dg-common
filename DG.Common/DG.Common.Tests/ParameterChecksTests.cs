@@ -6,7 +6,7 @@ using Xunit;
 
 namespace DG.Common.Tests
 {
-    public class ThrowIfNullExtensionsTests
+    public class ParameterChecksTests
     {
         public static IEnumerable<object[]> DefaultValueData => new List<object[]>
         {
@@ -39,14 +39,14 @@ namespace DG.Common.Tests
         [InlineData("", "string")]
         public void Null_ShouldNotThrow<T>(T input, string name)
         {
-            MoreAsserts.NoExceptions(() => Throws.If.Null(input, name));
+            MoreAsserts.NoExceptions(() => ThrowIf.Parameter.IsNull(input, name));
         }
 
         [Theory]
         [MemberData(nameof(NullValueData))]
         public void Null_ShouldThrowArgumentNullException<T>(T input, string name)
         {
-            Assert.Throws<ArgumentNullException>(() => Throws.If.Null(input, name));
+            Assert.Throws<ArgumentNullException>(() => ThrowIf.Parameter.IsNull(input, name));
         }
 
         [Theory]
@@ -56,7 +56,7 @@ namespace DG.Common.Tests
         {
             string input = null;
 
-            var exception = Assert.Throws<ArgumentNullException>(() => Throws.If.Null(input, nameof(input), message));
+            var exception = Assert.Throws<ArgumentNullException>(() => ThrowIf.Parameter.IsNull(input, nameof(input), message));
 
             Assert.NotNull(exception.Message);
             Assert.NotEmpty(exception.Message);
@@ -68,7 +68,7 @@ namespace DG.Common.Tests
             string input = null;
             string message = "This is a custom message";
 
-            var exception = Assert.Throws<ArgumentNullException>(() => Throws.If.Null(input, nameof(input), message));
+            var exception = Assert.Throws<ArgumentNullException>(() => ThrowIf.Parameter.IsNull(input, nameof(input), message));
 
             Assert.NotNull(exception.Message);
             Assert.Contains(message, exception.Message);
@@ -80,7 +80,7 @@ namespace DG.Common.Tests
             string input = null;
             string argumentName = "inputString";
 
-            var exception = Assert.Throws<ArgumentNullException>(() => Throws.If.Null(input, argumentName));
+            var exception = Assert.Throws<ArgumentNullException>(() => ThrowIf.Parameter.IsNull(input, argumentName));
 
             Assert.NotNull(exception.ParamName);
             Assert.Equal(argumentName, exception.ParamName);
@@ -90,22 +90,22 @@ namespace DG.Common.Tests
         [MemberData(nameof(DefaultValueData))]
         public void NullOrDefault_ShouldThrowArgumentExceptionOnDefault<T>(T input, string name)
         {
-            Assert.Throws<ArgumentException>(() => Throws.If.NullOrDefault(input, name));
+            Assert.Throws<ArgumentException>(() => ThrowIf.Parameter.IsNullOrDefault(input, name));
         }
 
         [Fact]
         public void NullOrDefault_ShouldNotThrowArgumentExceptionOnNotDefault()
         {
-            Throws.If.NullOrDefault("a", "string");
-            Throws.If.NullOrDefault(1, "int");
-            Throws.If.NullOrDefault(DateTime.Now, "datetime");
+            ThrowIf.Parameter.IsNullOrDefault("a", "string");
+            ThrowIf.Parameter.IsNullOrDefault(1, "int");
+            ThrowIf.Parameter.IsNullOrDefault(DateTime.Now, "datetime");
         }
 
         [Theory]
         [MemberData(nameof(EmptyCollectionData))]
         public void NullOrEmpty_ShouldThrowArgumentExceptionOnEmpty<T>(IEnumerable<T> input, string name)
         {
-            Assert.Throws<ArgumentException>(() => Throws.If.NullOrEmpty(input, name));
+            Assert.Throws<ArgumentException>(() => ThrowIf.Parameter.IsNullOrEmpty(input, name));
         }
 
         [Fact]
@@ -118,7 +118,7 @@ namespace DG.Common.Tests
         [MemberData(nameof(FilledCollectionData))]
         public void NullOrEmpty_ShouldNotThrowArgumentExceptionOnFilled<T>(IEnumerable<T> input, string name)
         {
-            MoreAsserts.NoExceptions(() => Throws.If.NullOrEmpty(input, name));
+            MoreAsserts.NoExceptions(() => ThrowIf.Parameter.IsNullOrEmpty(input, name));
         }
 
         [Fact]
@@ -130,43 +130,83 @@ namespace DG.Common.Tests
         [Fact]
         public void NullOrEmpty_ShouldThrowOnNullString()
         {
-            Assert.Throws<ArgumentNullException>(() => Throws.If.NullOrEmpty(null, "string"));
+            Assert.Throws<ArgumentNullException>(() => ThrowIf.Parameter.IsNullOrEmpty(null, "string"));
         }
 
         [Fact]
         public void NullOrEmpty_ShouldThrowOnEmptyString()
         {
-            Assert.Throws<ArgumentException>(() => Throws.If.NullOrEmpty(string.Empty, "string"));
+            Assert.Throws<ArgumentException>(() => ThrowIf.Parameter.IsNullOrEmpty(string.Empty, "string"));
         }
 
         [Fact]
         public void NullOrEmpty_ShouldNotThrowOnFilledString()
         {
-            MoreAsserts.NoExceptions(() => Throws.If.NullOrEmpty("-", "string"));
+            MoreAsserts.NoExceptions(() => ThrowIf.Parameter.IsNullOrEmpty("-", "string"));
         }
 
         [Fact]
         public void NullOrWhitespace_ShouldThrowOnNullString()
         {
-            Assert.Throws<ArgumentNullException>(() => Throws.If.NullOrWhiteSpace(null, "string"));
+            Assert.Throws<ArgumentNullException>(() => ThrowIf.Parameter.IsNullOrWhiteSpace(null, "string"));
         }
 
         [Fact]
         public void NullOrWhitespace_ShouldThrowOnEmptyString()
         {
-            Assert.Throws<ArgumentException>(() => Throws.If.NullOrWhiteSpace(string.Empty, "string"));
+            Assert.Throws<ArgumentException>(() => ThrowIf.Parameter.IsNullOrWhiteSpace(string.Empty, "string"));
         }
 
         [Fact]
         public void NullOrWhitespace_ShouldThrowOnWhitespaceString()
         {
-            Assert.Throws<ArgumentException>(() => Throws.If.NullOrWhiteSpace("\t \r\n", "string"));
+            Assert.Throws<ArgumentException>(() => ThrowIf.Parameter.IsNullOrWhiteSpace("\t \r\n", "string"));
         }
 
         [Fact]
         public void NullOrWhitespace_ShouldNotThrowOnFilledString()
         {
-            MoreAsserts.NoExceptions(() => Throws.If.NullOrWhiteSpace("\t- \r\n", "string"));
+            MoreAsserts.NoExceptions(() => ThrowIf.Parameter.IsNullOrWhiteSpace("\t- \r\n", "string"));
+        }
+
+
+        [Fact]
+        public void Matches_ShouldNotThrowOnFalse()
+        {
+            int i = 0;
+
+            Func<int, bool> predicate = (x) => false;
+
+            MoreAsserts.NoExceptions(() => ThrowIf.Parameter.Matches(i, predicate, nameof(i)));
+        }
+        [Fact]
+        public void Matches_ShouldNotThrowOnNullAndFalse()
+        {
+            object obj = null;
+
+            Func<object, bool> predicate = (x) => false;
+
+            MoreAsserts.NoExceptions(() => ThrowIf.Parameter.Matches(obj, predicate, nameof(obj)));
+        }
+
+        [Fact]
+        public void Matches_ShouldThrowOnTrue()
+        {
+            int i = 0;
+
+            Func<int, bool> predicate = (x) => true;
+
+            Assert.Throws<ArgumentException>(() => ThrowIf.Parameter.Matches(i, predicate, nameof(i)));
+        }
+
+        [Fact]
+        public void Matches_ShouldThrowOnNullAndTrue()
+        {
+            object obj = null;
+
+            Func<object, bool> predicate = (x) => true;
+
+            Assert.Throws<ArgumentException>(() => ThrowIf.Parameter.Matches(obj, predicate, nameof(obj)));
         }
     }
 }
