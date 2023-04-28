@@ -10,5 +10,10 @@
         /// Provides methods to safeguard function parameters.
         /// </summary>
         public static ParameterChecks Parameter { get; } = new ParameterChecks();
+
+        /// <summary>
+        /// Provides methods to safeguard function parameters.
+        /// </summary>
+        public static EnumerableChecks Enumerable { get; } = new EnumerableChecks();
     }
 }
