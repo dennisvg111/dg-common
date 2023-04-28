@@ -3,16 +3,12 @@
     /// <summary>
     /// Provides methods that throw exceptions on specific conditions, to reduce boilerplate code.
     /// </summary>
-    public class Throws
+    public static class ThrowIf
     {
-        private Throws()
-        {
-
-        }
 
         /// <summary>
-        /// The entry point for the <see cref="Throws"/> class.
+        /// Provides methods to safeguard function parameters.
         /// </summary>
-        public static Throws If => new Throws();
+        public static ParameterChecks Parameter { get; } = new ParameterChecks();
     }
 }
