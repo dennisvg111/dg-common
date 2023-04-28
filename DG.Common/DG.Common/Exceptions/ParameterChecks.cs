@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace DG.Common.Exceptions
 {
@@ -81,11 +80,7 @@ namespace DG.Common.Exceptions
         public void IsNullOrEmpty<T>(IEnumerable<T> input, string paramName, string message = null)
         {
             IsNull(input, paramName, message);
-            message = string.IsNullOrEmpty(message) ? "Parameter cannot be empty." : message;
-            if (!input.Any())
-            {
-                throw new ArgumentException(message, paramName);
-            }
+            ThrowIf.Enumerable.IsEmpty(input, paramName, message);
         }
 
         /// <summary>
