@@ -6,7 +6,7 @@ using Xunit;
 
 namespace DG.Common.Tests
 {
-    public class EnumerableChecksTests
+    public class CollectionChecksTests
     {
         public static object[][] EmptyLists = new object[][]
         {
@@ -42,7 +42,7 @@ namespace DG.Common.Tests
         [MemberData(nameof(EmptyLists))]
         public void IsEmpty_ShouldThrow(List<int> values)
         {
-            Action check = () => ThrowIf.Enumerable.IsEmpty(values, nameof(values));
+            Action check = () => ThrowIf.Collection(values, nameof(values)).IsEmpty();
 
             Assert.Throws<ArgumentException>(check);
         }
@@ -52,7 +52,7 @@ namespace DG.Common.Tests
         [MemberData(nameof(OddsList))]
         public void IsEmpty_ShouldNotThrow(List<int> values)
         {
-            Action check = () => ThrowIf.Enumerable.IsEmpty(values, nameof(values));
+            Action check = () => ThrowIf.Collection(values, nameof(values)).IsEmpty();
 
             MoreAsserts.NoExceptions(check);
         }
@@ -63,7 +63,7 @@ namespace DG.Common.Tests
         {
             Func<int, bool> evenCheck = (i) => i % 2 == 0;
 
-            Action check = () => ThrowIf.Enumerable.HasAny(values, evenCheck, nameof(values));
+            Action check = () => ThrowIf.Collection(values, nameof(values)).Any(evenCheck);
 
             Assert.Throws<ArgumentException>(check);
         }
@@ -75,7 +75,7 @@ namespace DG.Common.Tests
         {
             Func<int, bool> evenCheck = (i) => i % 2 == 0;
 
-            Action check = () => ThrowIf.Enumerable.HasAny(values, evenCheck, nameof(values));
+            Action check = () => ThrowIf.Collection(values, nameof(values)).Any(evenCheck);
 
             MoreAsserts.NoExceptions(check);
         }
@@ -87,7 +87,7 @@ namespace DG.Common.Tests
         {
             Func<int, bool> evenCheck = (i) => i % 2 == 0;
 
-            Action check = () => ThrowIf.Enumerable.HasNo(values, evenCheck, nameof(values));
+            Action check = () => ThrowIf.Collection(values, nameof(values)).None(evenCheck);
 
             Assert.Throws<ArgumentException>(check);
         }
@@ -98,7 +98,7 @@ namespace DG.Common.Tests
         {
             Func<int, bool> evenCheck = (i) => i % 2 == 0;
 
-            Action check = () => ThrowIf.Enumerable.HasNo(values, evenCheck, nameof(values));
+            Action check = () => ThrowIf.Collection(values, nameof(values)).None(evenCheck);
 
             MoreAsserts.NoExceptions(check);
         }

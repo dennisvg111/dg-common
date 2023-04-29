@@ -80,7 +80,7 @@ namespace DG.Common.Exceptions
         public void IsNullOrEmpty<T>(IEnumerable<T> input, string paramName, string message = null)
         {
             IsNull(input, paramName, message);
-            ThrowIf.Enumerable.IsEmpty(input, paramName, message);
+            ThrowIf.Collection(input, paramName).IsEmpty(message);
         }
 
         /// <summary>
@@ -129,7 +129,6 @@ namespace DG.Common.Exceptions
         /// <exception cref="ArgumentException"></exception>
         public void Matches<T>(T input, Func<T, bool> predicate, string paramName, string message)
         {
-            message = string.IsNullOrEmpty(message) ? "Parameter is invalid." : message;
             if (predicate(input))
             {
                 throw new ArgumentException(message, paramName);
