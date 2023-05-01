@@ -33,9 +33,9 @@ namespace DG.Common.Exceptions
         /// <exception cref="ArgumentException"></exception>
         public void IsEmpty(string message = null)
         {
-            message = string.IsNullOrEmpty(message) ? "Collection cannot be empty." : message;
             if (!_input.Any())
             {
+                message = string.IsNullOrEmpty(message) ? "Collection cannot be empty." : message;
                 throw new ArgumentException(_paramName, message);
             }
         }
@@ -48,9 +48,9 @@ namespace DG.Common.Exceptions
         /// <exception cref="ArgumentException"></exception>
         public void Any(Func<T, bool> predicate, string message = null)
         {
-            message = string.IsNullOrEmpty(message) ? "Collection cannot contain any element matching given predicate." : message;
             if (_input.Any(predicate))
             {
+                message = string.IsNullOrEmpty(message) ? "Collection cannot contain any element matching given predicate." : message;
                 throw new ArgumentException(_paramName, message);
             }
         }
@@ -63,9 +63,9 @@ namespace DG.Common.Exceptions
         /// <exception cref="ArgumentException"></exception>
         public void None(Func<T, bool> predicate, string message = null)
         {
-            message = string.IsNullOrEmpty(message) ? "Collection must contain at least one element matching given predicate." : message;
             if (!_input.Any(predicate))
             {
+                message = string.IsNullOrEmpty(message) ? "Collection must contain at least one element matching given predicate." : message;
                 throw new ArgumentException(_paramName, message);
             }
         }
@@ -78,9 +78,9 @@ namespace DG.Common.Exceptions
         /// <exception cref="ArgumentException"></exception>
         public void CountOtherThan(int count, string message = null)
         {
-            message = string.IsNullOrEmpty(message) ? $"Collection must contain exactly {count} elements." : message;
             if (_input.Count() != count)
             {
+                message = string.IsNullOrEmpty(message) ? $"Collection must contain exactly {count} elements." : message;
                 throw new ArgumentException(_paramName, message);
             }
         }
@@ -93,9 +93,9 @@ namespace DG.Common.Exceptions
         /// <exception cref="ArgumentException"></exception>
         public void CountLessThan(int count, string message = null)
         {
-            message = string.IsNullOrEmpty(message) ? $"Collection must contain {count} or more elements." : message;
             if (_input.Count() < count)
             {
+                message = string.IsNullOrEmpty(message) ? $"Collection must contain {count} or more elements." : message;
                 throw new ArgumentException(_paramName, message);
             }
         }
@@ -108,9 +108,9 @@ namespace DG.Common.Exceptions
         /// <exception cref="ArgumentException"></exception>
         public void CountMoreThan(int count, string message = null)
         {
-            message = string.IsNullOrEmpty(message) ? $"Collection must contain {count} or less elements." : message;
             if (_input.Count() > count)
             {
+                message = string.IsNullOrEmpty(message) ? $"Collection must contain {count} or less elements." : message;
                 throw new ArgumentException(_paramName, message);
             }
         }

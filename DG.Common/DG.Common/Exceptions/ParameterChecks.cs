@@ -26,10 +26,29 @@ namespace DG.Common.Exceptions
         /// <exception cref="ArgumentNullException"></exception>
         public void IsNull<T>(T input, string paramName, string message = null)
         {
-            message = string.IsNullOrEmpty(message) ? "Parameter cannot be null." : message;
             if (input == null)
             {
+                message = string.IsNullOrEmpty(message) ? "Parameter cannot be null." : message;
                 throw new ArgumentNullException(paramName, message);
+            }
+        }
+
+        /// <summary>
+        /// Throws an exception if the input is null, or equal to the default value of type <typeparamref name="T"/>.
+        /// </summary>
+        /// <param name="input"></param>
+        /// <param name="paramName"></param>
+        /// <param name="message"></param>
+        /// <exception cref="ArgumentNullException"></exception>
+        /// <exception cref="ArgumentException"></exception>
+        public void IsNullOrDefault<T>(T input, string paramName, string message = null)
+        {
+            IsNull(input, paramName, message);
+            //better performance than object.Equals(value, default(T))
+            if (EqualityComparer<T>.Default.Equals(input, default(T)))
+            {
+                message = string.IsNullOrEmpty(message) ? "Parameter cannot be default value." : message;
+                throw new ArgumentException(message, paramName);
             }
         }
 
@@ -44,9 +63,9 @@ namespace DG.Common.Exceptions
         public void IsNullOrEmpty(string input, string paramName, string message = null)
         {
             IsNull(input, paramName, message);
-            message = string.IsNullOrEmpty(message) ? "Parameter cannot be empty." : message;
             if (input == string.Empty)
             {
+                message = string.IsNullOrEmpty(message) ? "Parameter cannot be empty." : message;
                 throw new ArgumentException(message, paramName);
             }
         }
@@ -62,9 +81,9 @@ namespace DG.Common.Exceptions
         public void IsNullOrWhiteSpace(string input, string paramName, string message = null)
         {
             IsNull(input, paramName, message);
-            message = string.IsNullOrEmpty(message) ? "Parameter cannot be empty or whitespace." : message;
             if (string.IsNullOrWhiteSpace(input))
             {
+                message = string.IsNullOrEmpty(message) ? "Parameter cannot be empty or whitespace." : message;
                 throw new ArgumentException(message, paramName);
             }
         }
@@ -82,26 +101,6 @@ namespace DG.Common.Exceptions
             IsNull(input, paramName, message);
             ThrowIf.Collection(input, paramName).IsEmpty(message);
         }
-
-        /// <summary>
-        /// Throws an exception if the input is null, or equal to the default value of type <typeparamref name="T"/>.
-        /// </summary>
-        /// <param name="input"></param>
-        /// <param name="paramName"></param>
-        /// <param name="message"></param>
-        /// <exception cref="ArgumentNullException"></exception>
-        /// <exception cref="ArgumentException"></exception>
-        public void IsNullOrDefault<T>(T input, string paramName, string message = null)
-        {
-            IsNull(input, paramName, message);
-            message = string.IsNullOrEmpty(message) ? "Parameter cannot be default value." : message;
-            //better performance than object.Equals(value, default(T))
-            if (EqualityComparer<T>.Default.Equals(input, default(T)))
-            {
-                throw new ArgumentException(message, paramName);
-            }
-        }
-
 
         /// <summary>
         /// Throws an exception if the input matches the given predicate.

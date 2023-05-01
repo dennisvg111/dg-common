@@ -6,6 +6,8 @@ namespace DG.Common.GenericNumbers
     {
         private readonly T _value;
 
+        public T Value => _value;
+
         public Operators(T value)
         {
             _value = value;
@@ -89,6 +91,15 @@ namespace DG.Common.GenericNumbers
             {
                 return default(T);
             }
+        }
+
+        /// <summary>
+        /// Returns a string representation of this number.
+        /// </summary>
+        /// <returns></returns>
+        public override string ToString()
+        {
+            return _value.ToString();
         }
     }
 }
