@@ -25,7 +25,6 @@ namespace DG.Common.GenericNumbers
         /// <summary>
         /// Creates a new instance of <see cref="GenericNumber{T}"/> for the given value.
         /// </summary>
-        /// <typeparam name="T"></typeparam>
         /// <param name="value"></param>
         /// <returns></returns>
         public static GenericNumber<T> From(T value)
@@ -136,9 +135,9 @@ namespace DG.Common.GenericNumbers
         /// <inheritdoc/>
         public override bool Equals(object obj)
         {
-            if ((obj is GenericNumber<T>))
+            if (obj is GenericNumber<T> number)
             {
-                return Equals((GenericNumber<T>)obj);
+                return Equals(number);
             }
             return _value.Equals(obj);
         }
