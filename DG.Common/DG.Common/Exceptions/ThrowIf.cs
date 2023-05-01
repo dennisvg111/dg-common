@@ -22,6 +22,13 @@ namespace DG.Common.Exceptions
             return new CollectionChecks<T>(input, paramName);
         }
 
+        /// <summary>
+        /// Provides methods to safeguard function parameters.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="input"></param>
+        /// <param name="paramName"></param>
+        /// <returns></returns>
         public static NumberChecks<T> Number<T>(T input, string paramName) where T : struct, IComparable, IComparable<T>, IConvertible, IEquatable<T>, IFormattable
         {
             return new NumberChecks<T>(input, paramName);
