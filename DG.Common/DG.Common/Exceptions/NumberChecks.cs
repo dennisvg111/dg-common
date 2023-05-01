@@ -32,21 +32,24 @@ namespace DG.Common.Exceptions
         /// <exception cref="ArgumentException"></exception>
         public void IsZero(string message = null)
         {
+            message = string.IsNullOrEmpty(message) ? $"Number cannot be zero." : message;
             if (_input == Operators<T>.Zero)
             {
-                throw new ArgumentException();
+                throw new ArgumentException(message, _paramName);
             }
         }
 
         /// <summary>
         /// Throws an exception if the number is less than zero.
         /// </summary>
+        /// <param name="message"></param>
         /// <exception cref="ArgumentException"></exception>
-        public void IsNegative()
+        public void IsNegative(string message = null)
         {
+            message = string.IsNullOrEmpty(message) ? $"Number cannot be less than zero." : message;
             if (_input < Operators<T>.Zero)
             {
-                throw new ArgumentException();
+                throw new ArgumentException(message, _paramName);
             }
         }
 
@@ -57,12 +60,14 @@ namespace DG.Common.Exceptions
         /// </summary>
         /// <param name="min"></param>
         /// <param name="max"></param>
-        /// <exception cref="ArgumentException"></exception>
-        public void IsNotBetweenInclusive(T min, T max)
+        /// <param name="message"></param>
+        /// <exception cref="ArgumentOutOfRangeException"></exception>
+        public void IsNotBetweenInclusive(T min, T max, string message = null)
         {
+            message = string.IsNullOrEmpty(message) ? $"Number must be between {min} and {max}." : message;
             if (_input < min || _input > max)
             {
-                throw new ArgumentException();
+                throw new ArgumentOutOfRangeException(_paramName, _input.Value, message);
             }
         }
     }

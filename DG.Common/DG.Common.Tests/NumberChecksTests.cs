@@ -92,7 +92,7 @@ namespace DG.Common.Tests
         {
             Action check = () => ThrowIf.Number(value, nameof(value)).IsNotBetweenInclusive(min, max);
 
-            Assert.Throws<ArgumentException>(check);
+            Assert.Throws<ArgumentOutOfRangeException>(check);
         }
 
         [Theory]
