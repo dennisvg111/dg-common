@@ -6,13 +6,13 @@ namespace DG.Common.Exceptions
     /// <inheritdoc cref="ThrowIf"/>
     public class NumberChecks<T> where T : struct, IComparable, IComparable<T>, IConvertible, IEquatable<T>, IFormattable
     {
-        private readonly Operators<T> _input;
+        private readonly GenericNumber<T> _input;
         private readonly string _paramName;
 
         /// <summary>
         /// The input for this check.
         /// </summary>
-        public T Input => _input;
+        public T Input => _input.Value;
 
         /// <summary>
         /// The parameter name for this check, to be used to set <see cref="ArgumentException.ParamName"/>.
@@ -21,7 +21,7 @@ namespace DG.Common.Exceptions
 
         internal NumberChecks(T input, string paramName)
         {
-            _input = input;
+            _input = GenericNumber<T>.From(input);
             _paramName = paramName;
         }
 
@@ -32,7 +32,7 @@ namespace DG.Common.Exceptions
         /// <exception cref="ArgumentException"></exception>
         public void IsZero(string message = null)
         {
-            if (_input == Operators<T>.Zero)
+            if (_input == GenericNumber<T>.Zero)
             {
                 message = string.IsNullOrEmpty(message) ? $"Number cannot be zero." : message;
                 throw new ArgumentException(message, _paramName);
@@ -46,7 +46,7 @@ namespace DG.Common.Exceptions
         /// <exception cref="ArgumentException"></exception>
         public void IsNegative(string message = null)
         {
-            if (_input < Operators<T>.Zero)
+            if (_input < GenericNumber<T>.Zero)
             {
                 message = string.IsNullOrEmpty(message) ? $"Number cannot be less than zero." : message;
                 throw new ArgumentException(message, _paramName);
