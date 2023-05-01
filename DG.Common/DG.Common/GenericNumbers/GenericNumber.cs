@@ -108,6 +108,25 @@ namespace DG.Common.GenericNumbers
             return left._value.CompareTo(right._value) <= 0;
         }
 
+        /// <summary>
+        /// Returns value clamped to the inclusive range of <paramref name="min"/> and <paramref name="max"/>.
+        /// </summary>
+        /// <param name="min"></param>
+        /// <param name="max"></param>
+        /// <returns></returns>
+        public T Clamp(T min, T max)
+        {
+            if (_value.CompareTo(min) < 0)
+            {
+                return min;
+            }
+            if (_value.CompareTo(max) > 0)
+            {
+                return max;
+            }
+            return _value;
+        }
+
         /// <inheritdoc/>
         public bool Equals(GenericNumber<T> other)
         {
