@@ -68,7 +68,7 @@ namespace DG.Common.Exceptions
         }
 
         /// <summary>
-        /// Throws an exception if the stream does not support seeking.
+        /// Throws an exception if the stream does not support writing.
         /// </summary>
         /// <param name="message"></param>
         /// <exception cref="ArgumentException"></exception>
