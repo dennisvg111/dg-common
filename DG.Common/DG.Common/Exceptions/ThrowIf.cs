@@ -38,7 +38,7 @@ namespace DG.Common.Exceptions
         /// <summary>
         /// Provides methods to safeguard function parameters.
         /// </summary>
-        public static StreamChecks Stream<T>(Stream input, string paramName)
+        public static StreamChecks Stream(Stream input, string paramName)
         {
             return new StreamChecks(input, paramName);
         }
