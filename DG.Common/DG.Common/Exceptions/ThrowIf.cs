@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 
 namespace DG.Common.Exceptions
 {
@@ -32,6 +33,14 @@ namespace DG.Common.Exceptions
         public static NumberChecks<T> Number<T>(T input, string paramName) where T : struct, IComparable, IComparable<T>, IConvertible, IEquatable<T>, IFormattable
         {
             return new NumberChecks<T>(input, paramName);
+        }
+
+        /// <summary>
+        /// Provides methods to safeguard function parameters.
+        /// </summary>
+        public static StreamChecks Stream<T>(Stream input, string paramName)
+        {
+            return new StreamChecks(input, paramName);
         }
     }
 }
