@@ -37,7 +37,7 @@ namespace DG.Common.Threading
         {
             if (remaining.TotalMilliseconds > 0)
             {
-                await Task.Delay(remaining);
+                await Task.Delay(remaining).ConfigureAwait(false);
             }
             _semaphore.Release();
         }
