@@ -38,7 +38,8 @@ namespace DG.Common.Tests.Threading
             for (int i = 0; i < expectedCompleteGroups; i++)
             {
                 TimeSpan extraOffset = TimeSpan.FromTicks(i * _interval.Ticks);
-                Assert.Equal(_maxRequestsPerInterval, timeouts.Count(t => t.RateLimitedFor >= TimeSpan.FromSeconds(0) + extraOffset && t.RateLimitedFor <= TimeSpan.FromSeconds(1) + extraOffset));
+                var timeoutsInTimespan = timeouts.Count(t => t.RateLimitedFor >= TimeSpan.FromSeconds(0) + extraOffset && t.RateLimitedFor <= TimeSpan.FromSeconds(1) + extraOffset);
+                Assert.True(timeoutsInTimespan == _maxRequestsPerInterval, $"Expected {_maxRequestsPerInterval} tasks rated limited for around {extraOffset}, actual {timeoutsInTimespan}.");
             }
         }
 
