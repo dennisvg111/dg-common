@@ -27,7 +27,7 @@ namespace DG.Common.Tests.Threading
         {
             int amount = 3;
             int expectedCompleteGroups = amount / _maxRequestsPerInterval;
-            var offsets = GetRateLimitedOffsets(3);
+            var offsets = GetRateLimitedOffsets(amount);
             offsets = offsets.OrderBy(r => r.Started).ToArray();
 
             for (int i = 0; i < expectedCompleteGroups; i++)
