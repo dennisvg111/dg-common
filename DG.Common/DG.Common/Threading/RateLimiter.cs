@@ -20,11 +20,11 @@ namespace DG.Common.Threading
 
         public async Task<T> WaitFor<T>(Func<Task<T>> task)
         {
-            await _semaphore.WaitAsync().ConfigureAwait(false);
+            await _semaphore.WaitAsync();
             var stopwatch = Stopwatch.StartNew();
             try
             {
-                return await task().ConfigureAwait(false);
+                return await task();
             }
             finally
             {
@@ -37,7 +37,7 @@ namespace DG.Common.Threading
         {
             if (remaining.TotalMilliseconds > 0)
             {
-                await Task.Delay(remaining).ConfigureAwait(false);
+                await Task.Delay(remaining);
             }
             _semaphore.Release();
         }
