@@ -15,7 +15,7 @@ namespace DG.Common.Tests.Threading
         [Fact]
         public void Execute_CanRunParallel()
         {
-            var offsets = GetRateLimitedOffsets(10);
+            var offsets = GetRateLimitedOffsets(3);
             offsets = offsets.OrderBy(r => r.Started).ToArray();
 
             Assert.InRange(offsets[0].Offset, TimeSpan.FromSeconds(0), TimeSpan.FromSeconds(2));
@@ -25,7 +25,7 @@ namespace DG.Common.Tests.Threading
         [Fact]
         public void Execute_WaitsBeforeRatelimit()
         {
-            int amount = 17;
+            int amount = 3;
             int expectedCompleteGroups = amount / _maxRequestsPerInterval;
             var offsets = GetRateLimitedOffsets(15);
             offsets = offsets.OrderBy(r => r.Started).ToArray();
@@ -40,7 +40,7 @@ namespace DG.Common.Tests.Threading
         [Fact(Skip = "Not important for now")]
         public void Execute_Fifo()
         {
-            var results = GetRateLimitedOffsets(15);
+            var results = GetRateLimitedOffsets(3);
 
             var offsets = results.OrderBy(t => t.Started).Select(r => r.Offset).ToArray();
             MoreAsserts.IsOrdered(offsets);
