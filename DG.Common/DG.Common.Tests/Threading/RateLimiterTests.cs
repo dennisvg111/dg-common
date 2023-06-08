@@ -1,6 +1,7 @@
 ﻿using DG.Common.Tests.XUnitHelpers;
 using DG.Common.Threading;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Xunit;
@@ -12,23 +13,27 @@ namespace DG.Common.Tests.Threading
         private const int _maxRequestsPerInterval = 5;
         private static readonly TimeSpan _interval = TimeSpan.FromSeconds(3);
 
+        private const int _amountOfRequests = 15;
+
         [Fact]
-        public void Execute_CanRunParallel()
+        public async void Execute_CanRunParallel()
         {
-            var offsets = GetRateLimitedOffsets(3);
-            offsets = offsets.OrderBy(r => r.Started).ToArray();
+            var results = await GetRateLimitedOffsets();
+            var offsets = results.OrderBy(r => r.Offset).ToArray();
 
             Assert.InRange(offsets[0].Offset, TimeSpan.FromSeconds(0), TimeSpan.FromSeconds(2));
-            MoreAsserts.IsInMargin(offsets[1].Offset, offsets[0].Offset, TimeSpan.FromMilliseconds(10));
+            if (_amountOfRequests > 1)
+            {
+                MoreAsserts.IsInMargin(offsets[1].Offset, offsets[0].Offset, TimeSpan.FromMilliseconds(10));
+            }
         }
 
         [Fact]
-        public void Execute_WaitsBeforeRatelimit()
+        public async void Execute_WaitsBeforeRatelimit()
         {
-            int amount = 3;
-            int expectedCompleteGroups = amount / _maxRequestsPerInterval;
-            var offsets = GetRateLimitedOffsets(amount);
-            offsets = offsets.OrderBy(r => r.Started).ToArray();
+            int expectedCompleteGroups = _amountOfRequests / _maxRequestsPerInterval;
+            var results = await GetRateLimitedOffsets();
+            var offsets = results.OrderBy(r => r.Offset).ToArray();
 
             for (int i = 0; i < expectedCompleteGroups; i++)
             {
@@ -38,36 +43,26 @@ namespace DG.Common.Tests.Threading
         }
 
         [Fact(Skip = "Not important for now")]
-        public void Execute_Fifo()
+        public async void Execute_Fifo()
         {
-            var results = GetRateLimitedOffsets(3);
+            var results = await GetRateLimitedOffsets();
 
             var offsets = results.OrderBy(t => t.Started).Select(r => r.Offset).ToArray();
             MoreAsserts.IsOrdered(offsets);
         }
 
-        private static TimerResult[] GetRateLimitedOffsets(int count)
+        private static async Task<TimerResult[]> GetRateLimitedOffsets()
         {
             var limiter = new RateLimiter(5, _interval);
 
-            DateTime start = DateTime.Now;
-            TimerResult[] offsets = new TimerResult[count];
-
-            Parallel.For(0, offsets.Length, (i) =>
+            List<Task<TimerResult>> tasks = new List<Task<TimerResult>>();
+            for (int i = 0; i < _amountOfRequests; i++)
             {
-                offsets[i] = new TimerResult();
-                var time = limiter.WaitFor(() => GetTime()).Result;
-                offsets[i].SetFinished(time - start);
-            });
+                var result = new TimerResult();
+                tasks.Add(limiter.WaitFor(() => result.SetFinished()));
+            }
 
-            return offsets;
-        }
-
-        private static async Task<DateTime> GetTime()
-        {
-            var started = DateTime.Now;
-            await Task.Delay(1000);
-            return started;
+            return await Task.WhenAll(tasks);
         }
 
         private class TimerResult
@@ -78,9 +73,11 @@ namespace DG.Common.Tests.Threading
             public DateTime Started => _started;
             public TimeSpan Offset => _offset;
 
-            public void SetFinished(TimeSpan offset)
+            public async Task<TimerResult> SetFinished()
             {
-                _offset = offset;
+                _offset = DateTime.Now - _started;
+                await Task.Delay(1000);
+                return this;
             }
 
             public override string ToString()
