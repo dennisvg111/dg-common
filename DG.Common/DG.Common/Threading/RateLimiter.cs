@@ -10,7 +10,6 @@ namespace DG.Common.Threading
     /// </summary>
     public class RateLimiter
     {
-        private readonly int _maxRequestsPerInterval;
         private readonly TimeSpan _interval;
         private readonly SemaphoreSlim _semaphore;
 
@@ -22,7 +21,6 @@ namespace DG.Common.Threading
         public RateLimiter(int maxRequestsPerInterval, TimeSpan interval)
         {
             _semaphore = new SemaphoreSlim(maxRequestsPerInterval);
-            _maxRequestsPerInterval = maxRequestsPerInterval;
             _interval = interval;
         }
 
