@@ -39,7 +39,7 @@ namespace DG.Common.Tests.Threading
             {
                 TimeSpan extraOffset = TimeSpan.FromTicks(i * _interval.Ticks);
                 var timeoutsInTimespan = timeouts.Count(t => t.RateLimitedFor >= TimeSpan.FromSeconds(0) + extraOffset && t.RateLimitedFor <= TimeSpan.FromSeconds(1) + extraOffset);
-                Assert.True(timeoutsInTimespan == _maxRequestsPerInterval, $"Expected {_maxRequestsPerInterval} tasks rated limited for around {extraOffset}, actual {timeoutsInTimespan}.");
+                Assert.True(timeoutsInTimespan == _maxRequestsPerInterval, $"Expected {_maxRequestsPerInterval} tasks rate-limited for around {extraOffset}, actual {timeoutsInTimespan}. Total range {timeouts.Select(t => t.RateLimitedFor).Min()}-{timeouts.Select(t => t.RateLimitedFor).Max()}.");
             }
         }
 
