@@ -28,15 +28,15 @@ namespace DG.Common.Threading
         /// Executes the given task when allowed according to this <see cref="RateLimiter"/>, and returns the result.
         /// </summary>
         /// <typeparam name="T"></typeparam>
-        /// <param name="function"></param>
+        /// <param name="task"></param>
         /// <returns></returns>
-        public async Task<T> ExecuteAsync<T>(Func<Task<T>> function)
+        public async Task<T> ExecuteAsync<T>(Func<Task<T>> task)
         {
             await _semaphore.WaitAsync().ConfigureAwait(false);
             var stopwatch = Stopwatch.StartNew();
             try
             {
-                return await function().ConfigureAwait(false);
+                return await task().ConfigureAwait(false);
             }
             finally
             {
