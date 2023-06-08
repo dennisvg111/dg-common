@@ -7,7 +7,7 @@ namespace DG.Common.Tests.Threading
     public class TaskLockTests
     {
         [Fact]
-        public async void UpdateValue_Corrupts()
+        public void UpdateValue_Corrupts()
         {
             var state = new CorruptStateExample();
             var task1 = state.UpdateValueAsync();
@@ -19,7 +19,7 @@ namespace DG.Common.Tests.Threading
         }
 
         [Fact]
-        public async void UpdateValue_LockedWorks()
+        public void UpdateValue_LockedWorks()
         {
             var state = new CorruptStateExample();
             var task1 = state.UpdateValueLockedAsync();
@@ -31,7 +31,7 @@ namespace DG.Common.Tests.Threading
         }
 
         [Fact]
-        public async void UpdateValue_GenericLockedWorks()
+        public void UpdateValue_GenericLockedWorks()
         {
             var state = new CorruptStateExample();
             var task1 = state.UpdateValueGenericLockedAsync();
