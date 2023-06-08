@@ -60,7 +60,7 @@ namespace DG.Common.Tests.Threading
             for (int i = 0; i < _amountOfRequests; i++)
             {
                 var result = new RateLimiterResult();
-                tasks.Add(limiter.WaitFor(() => result.SetActualStartTime()));
+                tasks.Add(limiter.ExecuteAsync(() => result.SetActualStartTime()));
             }
 
             return await Task.WhenAll(tasks);

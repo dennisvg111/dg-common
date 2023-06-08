@@ -30,26 +30,26 @@ namespace DG.Common.Threading
         /// <typeparam name="T"></typeparam>
         /// <param name="task"></param>
         /// <returns></returns>
-        public async Task<T> WaitFor<T>(Func<Task<T>> task)
+        public async Task<T> ExecuteAsync<T>(Func<Task<T>> task)
         {
-            await _semaphore.WaitAsync();
+            await _semaphore.WaitAsync().ConfigureAwait(false);
             var stopwatch = Stopwatch.StartNew();
             try
             {
-                return await task();
+                return await task().ConfigureAwait(false);
             }
             finally
             {
                 var remaining = _interval - stopwatch.Elapsed;
-                _ = ReleaseSemaphoreAfterDelayAsync(remaining);
+                ReleaseSemaphoreAfterDelayAsync(remaining);
             }
         }
 
-        private async Task ReleaseSemaphoreAfterDelayAsync(TimeSpan remaining)
+        private async void ReleaseSemaphoreAfterDelayAsync(TimeSpan remaining)
         {
             if (remaining.TotalMilliseconds > 0)
             {
-                await Task.Delay(remaining);
+                await Task.Delay(remaining).ConfigureAwait(false);
             }
             _semaphore.Release();
         }
