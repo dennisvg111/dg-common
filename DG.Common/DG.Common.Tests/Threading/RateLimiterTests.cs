@@ -16,73 +16,75 @@ namespace DG.Common.Tests.Threading
         private const int _amountOfRequests = 15;
 
         [Fact]
-        public async void Execute_CanRunParallel()
+        public async void WaitFor_CanRunParallel()
         {
-            var results = await GetRateLimitedOffsets();
-            var offsets = results.OrderBy(r => r.Offset).ToArray();
+            var results = await ExecuteTestTasks();
+            var timeouts = results.OrderBy(r => r.RateLimitedFor).ToArray();
 
-            Assert.InRange(offsets[0].Offset, TimeSpan.FromSeconds(0), TimeSpan.FromSeconds(2));
+            Assert.InRange(timeouts[0].RateLimitedFor, TimeSpan.FromSeconds(0), TimeSpan.FromSeconds(2));
             if (_amountOfRequests > 1)
             {
-                MoreAsserts.IsInMargin(offsets[1].Offset, offsets[0].Offset, TimeSpan.FromMilliseconds(10));
+                MoreAsserts.IsInMargin(timeouts[1].RateLimitedFor, timeouts[0].RateLimitedFor, TimeSpan.FromMilliseconds(10));
             }
         }
 
         [Fact]
-        public async void Execute_WaitsBeforeRatelimit()
+        public async void WaitFor_WaitsBeforeRatelimit()
         {
             int expectedCompleteGroups = _amountOfRequests / _maxRequestsPerInterval;
-            var results = await GetRateLimitedOffsets();
-            var offsets = results.OrderBy(r => r.Offset).ToArray();
+            var results = await ExecuteTestTasks();
+            var timeouts = results.OrderBy(r => r.RateLimitedFor).ToArray();
 
             for (int i = 0; i < expectedCompleteGroups; i++)
             {
                 TimeSpan extraOffset = TimeSpan.FromTicks(i * _interval.Ticks);
-                Assert.Equal(_maxRequestsPerInterval, offsets.Count(t => t.Offset >= TimeSpan.FromSeconds(0) + extraOffset && t.Offset <= TimeSpan.FromSeconds(1) + extraOffset));
+                Assert.Equal(_maxRequestsPerInterval, timeouts.Count(t => t.RateLimitedFor >= TimeSpan.FromSeconds(0) + extraOffset && t.RateLimitedFor <= TimeSpan.FromSeconds(1) + extraOffset));
             }
         }
 
         [Fact(Skip = "Not important for now")]
-        public async void Execute_Fifo()
+        public async void WaitFor_FirstInFirstOut()
         {
-            var results = await GetRateLimitedOffsets();
+            var results = await ExecuteTestTasks();
 
-            var offsets = results.OrderBy(t => t.Started).Select(r => r.Offset).ToArray();
-            MoreAsserts.IsOrdered(offsets);
+            var timeouts = results.OrderBy(t => t.TaskStartTime).Select(r => r.RateLimitedFor).ToArray();
+            MoreAsserts.IsOrdered(timeouts);
         }
 
-        private static async Task<TimerResult[]> GetRateLimitedOffsets()
+        private static async Task<RateLimiterResult[]> ExecuteTestTasks()
         {
             var limiter = new RateLimiter(5, _interval);
 
-            List<Task<TimerResult>> tasks = new List<Task<TimerResult>>();
+            List<Task<RateLimiterResult>> tasks = new List<Task<RateLimiterResult>>();
             for (int i = 0; i < _amountOfRequests; i++)
             {
-                var result = new TimerResult();
-                tasks.Add(limiter.WaitFor(() => result.SetFinished()));
+                var result = new RateLimiterResult();
+                tasks.Add(limiter.WaitFor(() => result.SetActualStartTime()));
             }
 
             return await Task.WhenAll(tasks);
         }
 
-        private class TimerResult
+        private class RateLimiterResult
         {
-            private readonly DateTime _started = DateTime.Now;
-            private TimeSpan _offset;
+            private readonly DateTime _taskStartTime = DateTime.Now;
+            private DateTime _actualStartTime;
 
-            public DateTime Started => _started;
-            public TimeSpan Offset => _offset;
+            public DateTime TaskStartTime => _taskStartTime;
+            public TimeSpan RateLimitedFor => _actualStartTime - _taskStartTime;
 
-            public async Task<TimerResult> SetFinished()
+            public async Task<RateLimiterResult> SetActualStartTime()
             {
-                _offset = DateTime.Now - _started;
+                _actualStartTime = DateTime.Now;
+
+                //wait so we can test if the rate limiter takes task time into account.
                 await Task.Delay(1000);
                 return this;
             }
 
             public override string ToString()
             {
-                return _offset.ToString();
+                return RateLimitedFor.ToString();
             }
         }
     }
