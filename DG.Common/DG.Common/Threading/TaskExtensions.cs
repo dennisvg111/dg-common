@@ -17,7 +17,8 @@ namespace DG.Common.Threading
         /// <returns>The result value of this <see cref="Task{TResult}"/>, which is the same as the task's type parameter.</returns>
         public static T GetUnwrappedResult<T>(this Task<T> task)
         {
-            return task.GetAwaiter().GetResult();
+            //use Task.Run to avoid deadlocks, if the task would execute on the current thread.
+            return Task.Run(async () => await task).GetAwaiter().GetResult();
         }
     }
 }
