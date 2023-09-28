@@ -75,5 +75,41 @@ namespace DG.Common.Tests
 
             Assert.Equal(bytes2, bytes1);
         }
+
+        [Fact]
+        public void ToByteCount_Works()
+        {
+            {
+                var bytes = ByteSize.FromGB(4).AddMB(150);
+
+                var expected = 4_452_253_696L;
+
+                var actual = bytes.ToByteCount();
+                Assert.Equal(expected, actual);
+            }
+        }
+
+        [Theory]
+        [InlineData(0)]
+        [InlineData(1)]
+        [InlineData(1024)]
+        [InlineData(1023)]
+        [InlineData(999)]
+        public void ToByteCount_EdgeCases(long byteCount)
+        {
+            var bytes = ByteSize.FromBytes(byteCount);
+
+            Assert.Equal(byteCount, bytes);
+        }
+
+        [Fact]
+        public void ImplicitOperator_Works()
+        {
+            var bytes = ByteSize.FromMB(1).AddKB(200);
+
+            var expected = 1_253_376L;
+
+            Assert.Equal(expected, bytes);
+        }
     }
 }

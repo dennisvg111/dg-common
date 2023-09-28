@@ -221,6 +221,24 @@ namespace DG.Common
             return string.Format("{0:##.##} {1}{2}{3}", _byteCount / Math.Pow(unit, exp), sizePrefix[exp - 1], unitSubfix, unitStr);
         }
 
+        /// <summary>
+        /// Returns the amount of bytes this <see cref="ByteSize"/> represents.
+        /// </summary>
+        /// <returns></returns>
+        public long ToByteCount()
+        {
+            return _byteCount;
+        }
+
+        /// <summary>
+        /// Returns the amount of bytes this <see cref="ByteSize"/> represents.
+        /// </summary>
+        /// <returns></returns>
+        public static implicit operator long(ByteSize byteSize)
+        {
+            return byteSize._byteCount;
+        }
+
         #region Equality and comparison functions
         /// <inheritdoc/>
         public int CompareTo(ByteSize other)
