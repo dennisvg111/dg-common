@@ -1,4 +1,3 @@
-![icon](https://github.com/dennisvg111/dg-common/blob/main/icon.png?raw=true)
 # dg-common
  Common utilities
 
