@@ -28,6 +28,6 @@
     </PackageReference>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\DG.Common\DG.Common.csproj" />
+    <ProjectReference Include="..\src\DG.Common.csproj" />
   </ItemGroup>
 </Project>
