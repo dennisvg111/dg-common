@@ -21,7 +21,8 @@ namespace DG.Common
         }
 
         /// <summary>
-        /// Converts the base-64 encoded <see cref="string"/> to an array of <see cref="byte"/>s.
+        /// <para>Converts the base-64 encoded <see cref="string"/> to an array of <see cref="byte"/>s.</para>
+        /// <para>Note that this can also decode string creating using <see cref="Convert.ToBase64String(byte[])"/>.</para>
         /// </summary>
         /// <param name="base64"></param>
         /// <returns></returns>
