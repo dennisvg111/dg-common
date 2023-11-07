@@ -18,6 +18,17 @@ namespace DG.Common.Tests
             Assert.Equal(expected, result);
         }
 
+        [Fact]
+        public void Decode_Unsafe_works()
+        {
+            string unsafeBase64 = "//X7+9c=";
+            var expected = new byte[] { 255, 245, 251, 251, 215 };
+
+            var result = SafeBase64.Decode(unsafeBase64);
+
+            Assert.Equal(expected, result);
+        }
+
         [Theory]
         [InlineData(new byte[] { 123, 34, 115 }, "eyJz")]
         [InlineData(new byte[] { 251, 34, 115 }, "-yJz")]
