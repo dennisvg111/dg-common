@@ -5,30 +5,30 @@ using System.Threading.Tasks;
 namespace DG.Common.Threading
 {
     /// <summary>
-    /// Provides functionality for safely calling asynchronous functions from an environment that doesn't support running code asynchronously.
+    /// Provides functionality for safely executing asynchronous operations from an environment that only supports running code synchronously.
     /// </summary>
     public static class SafeSync
     {
-        private static readonly TaskFactory _myTaskFactory = new TaskFactory(CancellationToken.None, TaskCreationOptions.None, TaskContinuationOptions.None, TaskScheduler.Default);
+        private static readonly TaskFactory _factory = new TaskFactory(CancellationToken.None, TaskCreationOptions.None, TaskContinuationOptions.None, TaskScheduler.Default);
 
         /// <summary>
-        /// Runs the given asynchronous <paramref name="func"/> synchronously, and immediately returns the <typeparamref name="TResult"/> result.
+        /// Runs the given asynchronous <paramref name="asyncOperation"/> synchronously, and immediately returns the <typeparamref name="TResult"/> result.
         /// </summary>
         /// <typeparam name="TResult"></typeparam>
-        /// <param name="func"></param>
+        /// <param name="asyncOperation"></param>
         /// <returns></returns>
-        public static TResult Run<TResult>(Func<Task<TResult>> func)
+        public static TResult Run<TResult>(Func<Task<TResult>> asyncOperation)
         {
-            return _myTaskFactory.StartNew(func).Unwrap().GetAwaiter().GetResult();
+            return _factory.StartNew(asyncOperation).Unwrap().GetAwaiter().GetResult();
         }
 
         /// <summary>
-        /// Runs the given asynchronous <paramref name="func"/> synchronously.
+        /// Runs the given asynchronous <paramref name="asyncOperation"/> synchronously.
         /// </summary>
-        /// <param name="func"></param>
-        public static void Run(Func<Task> func)
+        /// <param name="asyncOperation"></param>
+        public static void Run(Func<Task> asyncOperation)
         {
-            _myTaskFactory.StartNew(func).Unwrap().GetAwaiter().GetResult();
+            _factory.StartNew(asyncOperation).Unwrap().GetAwaiter().GetResult();
         }
     }
 }
