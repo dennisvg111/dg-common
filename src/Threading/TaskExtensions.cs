@@ -10,7 +10,6 @@ namespace DG.Common.Threading
         /// <summary>
         /// <para>Gets the result value of this <see cref="Task{TResult}"/>, unwrapping exceptions if needed.</para>
         /// <para>Note that this is functionally the same as retrieving the result of <see cref="Task.GetAwaiter()"/></para>
-        /// 
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="task"></param>
