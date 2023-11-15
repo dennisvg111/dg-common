@@ -11,12 +11,29 @@ namespace DG.Common.Tests.Threading
             var result = TaskResult.Failure<int>();
 
             Assert.False(result.IsSuccessful);
+            Assert.False(result.FailedBecauseOfException);
         }
 
         [Fact]
         public void Failure_TryGet_ReturnsFalse()
         {
             var result = TaskResult.Failure<int>();
+
+            Assert.False(result.TryGet(out int _));
+        }
+        [Fact]
+        public void Exception_IsSuccessful_ReturnsFalse()
+        {
+            var result = TaskResult.UnexpectedException<int>();
+
+            Assert.False(result.IsSuccessful);
+            Assert.True(result.FailedBecauseOfException);
+        }
+
+        [Fact]
+        public void Exception_TryGet_ReturnsFalse()
+        {
+            var result = TaskResult.UnexpectedException<int>();
 
             Assert.False(result.TryGet(out int _));
         }
@@ -38,16 +55,6 @@ namespace DG.Common.Tests.Threading
 
             result.TryGet(out int value);
             Assert.Equal(10, value);
-        }
-
-        [Fact]
-        public void NotSuccessful_TryGet_ReturnsDefault()
-        {
-            var result = new TaskResult<int>(false, 10);
-
-            result.TryGet(out int value);
-
-            Assert.Equal(0, value);
         }
     }
 }
