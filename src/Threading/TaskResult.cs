@@ -6,22 +6,27 @@
     /// <typeparam name="T"></typeparam>
     public class TaskResult<T>
     {
-        private readonly bool _isSuccessFul;
+        private readonly TaskResultType _type;
         private readonly T _result;
 
         /// <summary>
         /// Indicates if the asynchronous operation was successful.
         /// </summary>
-        public bool IsSuccessful => _isSuccessFul;
+        public bool IsSuccessful => _type == TaskResultType.Success;
 
         /// <summary>
-        /// Initializes a new instance of <see cref="TaskResult{T}"/> with the given 
+        /// Indicates if an exception that differs from an expected failure has occured during the operation.
+        /// </summary>
+        public bool FailedBecauseOfException => _type == TaskResultType.UnexpectedException;
+
+        /// <summary>
+        /// Initializes a new instance of <see cref="TaskResult{T}"/> with the given <paramref name="result"/>.
         /// </summary>
         /// <param name="isSuccessFul"></param>
         /// <param name="result"></param>
-        public TaskResult(bool isSuccessFul, T result)
+        internal TaskResult(TaskResultType isSuccessFul, T result)
         {
-            _isSuccessFul = isSuccessFul;
+            _type = isSuccessFul;
             _result = result;
         }
 
@@ -32,12 +37,12 @@
         /// <returns>A value indicating if the asynchronous operation was succesful</returns>
         public bool TryGet(out T result)
         {
-            if (_isSuccessFul)
+            if (IsSuccessful)
             {
                 result = _result;
                 return true;
             }
-            result = default(T);
+            result = default;
             return false;
         }
     }
@@ -48,22 +53,41 @@
     public static class TaskResult
     {
         /// <summary>
-        /// Returns a new instance of <see cref="TaskResult{T}"/> with the given <paramref name="result"/>, and <see cref="TaskResult{T}.IsSuccessful"/> set to <see langword="true"/>.
+        /// <para>Returns a new instance of <see cref="TaskResult{T}"/> representing a successful result.</para>
+        /// <para>The result of the operation is set to <paramref name="result"/>, and <see cref="TaskResult{T}.IsSuccessful"/> is set to <see langword="true"/></para>
         /// </summary>
         /// <param name="result"></param>
         /// <returns></returns>
         public static TaskResult<T> Success<T>(T result)
         {
-            return new TaskResult<T>(true, result);
+            return new TaskResult<T>(TaskResultType.Success, result);
         }
 
         /// <summary>
-        /// Returns a new instance of <see cref="TaskResult{T}"/> where the result is set to the default value of <typeparamref name="T"/>, and <see cref="TaskResult{T}.IsSuccessful"/> set to <see langword="false"/>.
+        /// <para>Returns a new instance of <see cref="TaskResult{T}"/> representing an expected type of failure.</para>
+        /// <para>The result of the operation is set to the default value of <typeparamref name="T"/>, and <see cref="TaskResult{T}.IsSuccessful"/> is set to <see langword="false"/></para>
         /// </summary>
         /// <returns></returns>
         public static TaskResult<T> Failure<T>()
         {
-            return new TaskResult<T>(false, default(T));
+            return new TaskResult<T>(TaskResultType.Failure, default);
         }
+
+        /// <summary>
+        /// <para>Returns a new instance of <see cref="TaskResult{T}"/> representing an unexpected exception.</para>
+        /// <para>The result of the operation is set to the default value of <typeparamref name="T"/>, and <see cref="TaskResult{T}.IsSuccessful"/> is set to <see langword="false"/></para>
+        /// </summary>
+        /// <returns></returns>
+        public static TaskResult<T> UnexpectedException<T>()
+        {
+            return new TaskResult<T>(TaskResultType.UnexpectedException, default);
+        }
+    }
+
+    internal enum TaskResultType
+    {
+        Success,
+        Failure,
+        UnexpectedException
     }
 }
