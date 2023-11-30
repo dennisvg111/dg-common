@@ -1,5 +1,5 @@
 ﻿using DG.Common.Exceptions;
-using DG.Common.Tests.XUnitHelpers;
+using FluentAssertions;
 using System;
 using System.Collections.Generic;
 using Xunit;
@@ -54,7 +54,7 @@ namespace DG.Common.Tests
         {
             Action check = () => ThrowIf.Collection(values, nameof(values)).IsEmpty();
 
-            MoreAsserts.NoExceptions(check);
+            check.Should().NotThrow();
         }
 
         [Theory]
@@ -77,7 +77,7 @@ namespace DG.Common.Tests
 
             Action check = () => ThrowIf.Collection(values, nameof(values)).Any(evenCheck);
 
-            MoreAsserts.NoExceptions(check);
+            check.Should().NotThrow();
         }
 
         [Theory]
@@ -100,7 +100,7 @@ namespace DG.Common.Tests
 
             Action check = () => ThrowIf.Collection(values, nameof(values)).None(evenCheck);
 
-            MoreAsserts.NoExceptions(check);
+            check.Should().NotThrow();
         }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using DG.Common.Threading;
+using FluentAssertions;
 using System.Threading.Tasks;
 using Xunit;
 
@@ -15,7 +16,7 @@ namespace DG.Common.Tests.Threading
 
             Task.WaitAll(task1, task2);
 
-            Assert.NotEqual(2, state.Value);
+            state.Value.Should().NotBe(2);
         }
 
         [Fact]
@@ -27,7 +28,7 @@ namespace DG.Common.Tests.Threading
 
             Task.WaitAll(task1, task2);
 
-            Assert.Equal(2, state.Value);
+            state.Value.Should().Be(2);
         }
 
         [Fact]
@@ -39,7 +40,7 @@ namespace DG.Common.Tests.Threading
 
             Task.WaitAll(task1, task2);
 
-            Assert.Equal(2, state.Value);
+            state.Value.Should().Be(2);
         }
 
         private class CorruptStateExample

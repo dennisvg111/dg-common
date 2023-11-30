@@ -1,4 +1,5 @@
-﻿using Xunit;
+﻿using FluentAssertions;
+using Xunit;
 
 namespace DG.Common.Tests
 {
@@ -15,7 +16,7 @@ namespace DG.Common.Tests
         {
             var result = SafeBase64.Decode(base64);
 
-            Assert.Equal(expected, result);
+            result.Should().BeEquivalentTo(expected);
         }
 
         [Fact]
@@ -26,7 +27,7 @@ namespace DG.Common.Tests
 
             var result = SafeBase64.Decode(unsafeBase64);
 
-            Assert.Equal(expected, result);
+            result.Should().BeEquivalentTo(expected);
         }
 
         [Theory]
@@ -40,7 +41,7 @@ namespace DG.Common.Tests
         {
             var result = SafeBase64.Encode(bytes);
 
-            Assert.Equal(expected, result);
+            result.Should().Be(expected);
         }
     }
 }

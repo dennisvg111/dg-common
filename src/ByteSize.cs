@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Globalization;
 using System.IO;
 
 namespace DG.Common
@@ -22,6 +23,11 @@ namespace DG.Common
 
         private readonly long _byteCount;
 
+        /// <summary>
+        /// Returns the total amount of bytes this <see cref="ByteSize"/> represents.
+        /// </summary>
+        public long TotalBytes => _byteCount;
+
         private ByteSize(long byteCount)
         {
             _byteCount = byteCount;
@@ -41,6 +47,16 @@ namespace DG.Common
         public static ByteSize FromBytes(long bytes)
         {
             return new ByteSize(bytes);
+        }
+
+        /// <summary>
+        /// Creates a new instance of <see cref="ByteSize"/> from the given byte array.
+        /// </summary>
+        /// <param name="bytes"></param>
+        /// <returns></returns>
+        public static ByteSize FromBytes(byte[] bytes)
+        {
+            return new ByteSize(bytes.LongLength);
         }
 
         /// <summary>
@@ -96,16 +112,6 @@ namespace DG.Common
         public static ByteSize FromPB(double pb, UnitType unitType = UnitType.Binary)
         {
             return new ByteSize(pb, unitType, _pebiByte, _petaByte);
-        }
-
-        /// <summary>
-        /// Creates a new instance of <see cref="ByteSize"/> from the given byte array.
-        /// </summary>
-        /// <param name="bytes"></param>
-        /// <returns></returns>
-        public static ByteSize FromBytes(byte[] bytes)
-        {
-            return new ByteSize(bytes.LongLength);
         }
 
         /// <summary>
@@ -195,39 +201,46 @@ namespace DG.Common
         }
 
         /// <summary>
-        /// Returns a string representation of this <see cref="ByteSize"/>, using the default <see cref="FormattingStyle.Default"/> formatting.
+        /// Returns a string representation of this <see cref="ByteSize"/>, using <see cref="FormattingStyle.Default"/> formatting, and <see cref="CultureInfo.InvariantCulture"/>.
         /// </summary>
         /// <returns></returns>
         public override string ToString()
         {
-            return ToString(FormattingStyle.Default);
+            return ToString(FormattingStyle.Default, CultureInfo.InvariantCulture);
         }
 
         /// <summary>
-        /// Returns a string representation of this <see cref="ByteSize"/>, using the given formatting.
+        /// Returns a string representation of this <see cref="ByteSize"/>, using <see cref="FormattingStyle.Default"/> formatting, and the given <see cref="IFormatProvider"/>.
         /// </summary>
         /// <returns></returns>
-        public string ToString(FormattingStyle formatting)
+        public string ToString(IFormatProvider formatProvider)
         {
+            return ToString(FormattingStyle.Default, formatProvider);
+        }
+
+        /// <summary>
+        /// <para>Returns a string representation of this <see cref="ByteSize"/>, using the given <see cref="FormattingStyle"/>, and optionally a <see cref="IFormatProvider"/>.</para>
+        /// <para>Note that if <paramref name="formatProvider"/> is not given, <see cref="CultureInfo.InvariantCulture"/> will be used.</para>
+        /// </summary>
+        /// <returns></returns>
+        public string ToString(FormattingStyle formatting, IFormatProvider formatProvider = null)
+        {
+            if (formatProvider == null)
+            {
+                formatProvider = CultureInfo.InvariantCulture;
+            }
             int unit = (formatting == FormattingStyle.Default || formatting == FormattingStyle.IecBinary) ? _kibiByte : _kiloByte;
+            string unitStr = "B";
             if (_byteCount < unit)
             {
-                return string.Format("{0} {1}", _byteCount, "bytes");
+                return string.Format(formatProvider, "{0} {1}", _byteCount, unitStr);
             }
             int exp = (int)(Math.Log(_byteCount) / Math.Log(unit));
             string sizePrefix = formatting == FormattingStyle.IecDecimal ? "kmgtpezy" : "KMGTPEZY";
             string unitSubfix = formatting == FormattingStyle.IecBinary ? "i" : string.Empty;
-            string unitStr = "B";
-            return string.Format("{0:##.##} {1}{2}{3}", _byteCount / Math.Pow(unit, exp), sizePrefix[exp - 1], unitSubfix, unitStr);
-        }
-
-        /// <summary>
-        /// Returns the amount of bytes this <see cref="ByteSize"/> represents.
-        /// </summary>
-        /// <returns></returns>
-        public long ToByteCount()
-        {
-            return _byteCount;
+            double singleUnit = Math.Pow(unit, exp);
+            var rounded = Math.Round(_byteCount / singleUnit, 2, MidpointRounding.AwayFromZero);
+            return string.Format(formatProvider, "{0:##.##} {1}{2}{3}", rounded, sizePrefix[exp - 1], unitSubfix, unitStr);
         }
 
         /// <summary>

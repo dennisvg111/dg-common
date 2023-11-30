@@ -1,4 +1,5 @@
 ﻿using DG.Common.Threading;
+using FluentAssertions;
 using Xunit;
 
 namespace DG.Common.Tests.Threading
@@ -10,8 +11,8 @@ namespace DG.Common.Tests.Threading
         {
             var result = TaskResult.Failure<int>();
 
-            Assert.False(result.IsSuccessful);
-            Assert.False(result.FailedBecauseOfException);
+            result.IsSuccessful.Should().BeFalse();
+            result.FailedBecauseOfException.Should().BeFalse();
         }
 
         [Fact]
@@ -19,15 +20,17 @@ namespace DG.Common.Tests.Threading
         {
             var result = TaskResult.Failure<int>();
 
-            Assert.False(result.TryGet(out int _));
+            bool tryGetResult = result.TryGet(out int _);
+
+            tryGetResult.Should().BeFalse();
         }
         [Fact]
         public void Exception_IsSuccessful_ReturnsFalse()
         {
             var result = TaskResult.UnexpectedException<int>();
 
-            Assert.False(result.IsSuccessful);
-            Assert.True(result.FailedBecauseOfException);
+            result.IsSuccessful.Should().BeFalse();
+            result.FailedBecauseOfException.Should().BeTrue();
         }
 
         [Fact]
@@ -35,7 +38,9 @@ namespace DG.Common.Tests.Threading
         {
             var result = TaskResult.UnexpectedException<int>();
 
-            Assert.False(result.TryGet(out int _));
+            bool tryGetResult = result.TryGet(out int _);
+
+            tryGetResult.Should().BeFalse();
         }
 
         [Fact]
@@ -43,7 +48,7 @@ namespace DG.Common.Tests.Threading
         {
             var result = TaskResult.Success(10);
 
-            Assert.True(result.IsSuccessful);
+            result.IsSuccessful.Should().BeTrue();
         }
 
         [Fact]
@@ -51,10 +56,12 @@ namespace DG.Common.Tests.Threading
         {
             var result = TaskResult.Success(10);
 
-            Assert.True(result.TryGet(out int _));
+            bool tryGetResult = result.TryGet(out int _);
+
+            tryGetResult.Should().BeTrue();
 
             result.TryGet(out int value);
-            Assert.Equal(10, value);
+            value.Should().Be(10);
         }
     }
 }
