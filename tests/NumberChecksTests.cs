@@ -1,5 +1,5 @@
 ﻿using DG.Common.Exceptions;
-using DG.Common.Tests.TestHelpers;
+using FluentAssertions;
 using System;
 using Xunit;
 
@@ -41,7 +41,7 @@ namespace DG.Common.Tests
         {
             Action check = () => ThrowIf.Number(value, nameof(value)).IsZero();
 
-            MoreAsserts.NoExceptions(check);
+            check.Should().NotThrow();
         }
 
         [Theory]
@@ -51,7 +51,7 @@ namespace DG.Common.Tests
         {
             Action check = () => ThrowIf.Number(value, nameof(value)).IsZero();
 
-            MoreAsserts.NoExceptions(check);
+            check.Should().NotThrow();
         }
 
         [Theory]
@@ -70,7 +70,7 @@ namespace DG.Common.Tests
         {
             Action check = () => ThrowIf.Number(value, nameof(value)).IsNegative();
 
-            MoreAsserts.NoExceptions(check);
+            check.Should().NotThrow();
         }
 
         [Theory]
@@ -80,7 +80,7 @@ namespace DG.Common.Tests
         {
             Action check = () => ThrowIf.Number(value, nameof(value)).IsNegative();
 
-            MoreAsserts.NoExceptions(check);
+            check.Should().NotThrow();
         }
 
         [Theory]
@@ -103,7 +103,7 @@ namespace DG.Common.Tests
         {
             Action check = () => ThrowIf.Number(value, nameof(value)).IsNotBetweenInclusive(min, max);
 
-            MoreAsserts.NoExceptions(check);
+            check.Should().NotThrow();
         }
     }
 }
