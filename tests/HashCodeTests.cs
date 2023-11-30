@@ -1,4 +1,5 @@
-﻿using Xunit;
+﻿using FluentAssertions;
+using Xunit;
 
 namespace DG.Common.Tests
 {
@@ -13,7 +14,7 @@ namespace DG.Common.Tests
             var hashcode1 = HashCode.Of(string1);
             var hashcode2 = HashCode.Of(string2);
 
-            Assert.Equal(hashcode1, hashcode2);
+            hashcode1.Should().Be(hashcode2);
         }
 
         [Fact]
@@ -26,7 +27,7 @@ namespace DG.Common.Tests
             int codeAsInt = hashcode;
             int hashcodeResult = hashcode.GetHashCode();
 
-            Assert.Equal(codeAsInt, hashcodeResult);
+            codeAsInt.Should().Be(hashcodeResult);
         }
 
         [Fact]
@@ -38,7 +39,7 @@ namespace DG.Common.Tests
             var hashcode1 = HashCode.Of(string1).And(string2);
             var hashcode2 = HashCode.Of(string2).And(hashcode1);
 
-            Assert.NotEqual(hashcode1, hashcode2);
+            hashcode1.Should().NotBe(hashcode2);
         }
     }
 }

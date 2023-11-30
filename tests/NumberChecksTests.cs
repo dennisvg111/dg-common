@@ -1,5 +1,5 @@
 ﻿using DG.Common.Exceptions;
-using DG.Common.Tests.XUnitHelpers;
+using DG.Common.Tests.TestHelpers;
 using System;
 using Xunit;
 
