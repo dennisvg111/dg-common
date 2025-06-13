@@ -1,9 +1,9 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <ProjectGuid>{9F5EEB80-2CAC-4AD6-985A-603A3F21E743}</ProjectGuid>
-    <TargetFramework>net452</TargetFramework>
+    <TargetFramework>netstandard2.0</TargetFramework>
     <AssemblyTitle>DG.Common</AssemblyTitle>
-    <AssemblyVersion>1.13.4</AssemblyVersion>
+    <AssemblyVersion>2.0.1</AssemblyVersion>
     <Product>DG.Common</Product>
     <Copyright>Copyright ©  2023</Copyright>
     <OutputPath>bin\$(Configuration)\</OutputPath>
@@ -49,8 +49,6 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="Microsoft.CSharp" />
-    <Reference Include="System.Runtime.Caching" />
+    <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="9.0.6" />
   </ItemGroup>
 </Project>

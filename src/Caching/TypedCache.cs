@@ -1,20 +1,22 @@
 ﻿using DG.Common.Threading;
+using Microsoft.Extensions.Caching.Memory;
 using System;
-using System.Runtime.Caching;
 
 namespace DG.Common.Caching
 {
     /// <summary>
     /// Provides an easy way to create a strongly typed cache of values.
     /// <para></para>
-    /// Note that this cache is shared with other instances of <see cref="TypedCache{T}"/> with the same type <typeparamref name="T"/>, unless a specific <see cref="MemoryCache"/> is given.
+    /// Note that this cache is shared with other instances of <see cref="TypedCache{T}"/> with the same type <typeparamref name="T"/>, unless a specific <see cref="IMemoryCache"/> is given.
     /// </summary>
     /// <typeparam name="T"></typeparam>
     public sealed class TypedCache<T> where T : class
     {
+        private static readonly Lazy<IMemoryCache> _sharedCacheProvider = new Lazy<IMemoryCache>(() => new MemoryCache(new MemoryCacheOptions()));
+
         private readonly string _cachePrefix = $"TypedCache<{typeof(T).FullName}>";
 
-        private readonly MemoryCache _cache;
+        private readonly IMemoryCache _cache;
         private readonly LockProvider _locks;
         private readonly ExpirationPolicy _expiration;
 
@@ -22,14 +24,14 @@ namespace DG.Common.Caching
         /// Initializes a new <see cref="TypedCache{T}"/>, with the given <see cref="ExpirationPolicy"/>, using the default shared <see cref="MemoryCache"/>.
         /// </summary>
         /// <param name="expirationPolicy"></param>
-        public TypedCache(ExpirationPolicy expirationPolicy) : this(expirationPolicy, MemoryCache.Default) { }
+        public TypedCache(ExpirationPolicy expirationPolicy) : this(expirationPolicy, _sharedCacheProvider.Value) { }
 
         /// <summary>
         /// Initializes a new <see cref="TypedCache{T}"/>, with the given <see cref="ExpirationPolicy"/>, and the given <see cref="MemoryCache"/>.
         /// </summary>
         /// <param name="expirationPolicy"></param>
         /// <param name="cache"></param>
-        public TypedCache(ExpirationPolicy expirationPolicy, MemoryCache cache)
+        public TypedCache(ExpirationPolicy expirationPolicy, IMemoryCache cache)
         {
             _cache = cache;
             _locks = LockProvider.ByName(_cachePrefix);
@@ -45,7 +47,7 @@ namespace DG.Common.Caching
         {
             lock (_locks.DefaultLock)
             {
-                _cache.Add(_cachePrefix + key, savedItem, _expiration.GetPolicy());
+                _cache.Set(_cachePrefix + key, savedItem, _expiration.GetCacheEntryOptions());
             }
         }
 
@@ -58,7 +60,7 @@ namespace DG.Common.Caching
         {
             lock (_locks.DefaultLock)
             {
-                return _cache[_cachePrefix + key] as T;
+                return _cache.Get<T>(_cachePrefix + key);
             }
         }
 
@@ -70,14 +72,7 @@ namespace DG.Common.Caching
         /// <returns></returns>
         public T GetOrCreate(string key, Func<T> creationFunction)
         {
-            T value;
-            if (TryGet(key, out value))
-            {
-                return value;
-            }
-            value = creationFunction();
-            Save(key, value);
-            return value;
+            return _cache.GetOrCreate(_cachePrefix + key, (e) => creationFunction());
         }
 
         /// <summary>
@@ -86,10 +81,7 @@ namespace DG.Common.Caching
         /// <param name="key"></param>
         public void RemoveFromCache(string key)
         {
-            lock (_locks.DefaultLock)
-            {
-                _cache.Remove(_cachePrefix + key);
-            }
+            _cache.Remove(_cachePrefix + key);
         }
 
         /// <summary>
@@ -100,12 +92,7 @@ namespace DG.Common.Caching
         /// <returns></returns>
         public bool TryGet(string key, out T value)
         {
-            value = Get(key);
-            if (!Contains(key))
-            {
-                return false;
-            }
-            return true;
+            return _cache.TryGetValue<T>(_cachePrefix + key, out value);
         }
 
         /// <summary>
@@ -115,10 +102,7 @@ namespace DG.Common.Caching
         /// <returns></returns>
         public bool Contains(string key)
         {
-            lock (_locks.DefaultLock)
-            {
-                return _cache.Contains(_cachePrefix + key);
-            }
+            return _cache.TryGetValue(_cachePrefix + key, out object _);
         }
     }
 }
