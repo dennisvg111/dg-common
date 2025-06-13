@@ -18,6 +18,7 @@ namespace DG.Common.Caching
         /// Initializes a new <see cref="TypedCache{T}"/>, with the given <see cref="ExpirationPolicy"/>. Based on <paramref name="sharedOption"/> the cache will be shared with other instances for the given <typeparamref name="T"/>.
         /// </summary>
         /// <param name="expirationPolicy"></param>
+        /// <param name="sharedOption"></param>
         public TypedCache(ExpirationPolicy expirationPolicy, CacheSharingOptions sharedOption = CacheSharingOptions.Unique)
             : this(expirationPolicy, sharedOption == CacheSharingOptions.Shared ? CacheProvider.Shared<T>() : CacheProvider.CreateNewCache()) { }
 
@@ -25,6 +26,7 @@ namespace DG.Common.Caching
         /// Initializes a new <see cref="TypedCache{T}"/>, with the given <see cref="ExpirationPolicy"/>, sharing a cache with others that used the same <paramref name="cacheName"/> and <typeparamref name="T"/>.
         /// </summary>
         /// <param name="expirationPolicy"></param>
+        /// <param name="cacheName"></param>
         public TypedCache(ExpirationPolicy expirationPolicy, string cacheName)
             : this(expirationPolicy, CacheProvider.Named<T>(cacheName)) { }
 
