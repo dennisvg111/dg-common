@@ -113,7 +113,8 @@ namespace DG.Common
         /// <inheritdoc/>
         public bool Equals(Uulsid other)
         {
-            return _timestampBytes.Equals(other._timestampBytes)
+            return !(other is null)
+                && _timestampBytes.Equals(other._timestampBytes)
                 && _randomBytes.Equals(other._randomBytes);
         }
 
@@ -135,6 +136,10 @@ namespace DG.Common
         /// <returns></returns>
         public static bool operator ==(Uulsid left, Uulsid right)
         {
+            if (left is null)
+            {
+                return right is null;
+            }
             return left.Equals(right);
         }
 
