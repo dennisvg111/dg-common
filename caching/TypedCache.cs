@@ -38,6 +38,15 @@ namespace DG.Common.Caching
             _expiration = expirationPolicy;
         }
 
+        private static MemoryCacheEntryOptions CreateOptions(TimeSpan? slidingExpiration, DateTimeOffset? absoluteExpiration)
+        {
+            return new MemoryCacheEntryOptions()
+            {
+                SlidingExpiration = slidingExpiration,
+                AbsoluteExpiration = absoluteExpiration
+            };
+        }
+
         /// <summary>
         /// Saves a new item to the cache with the specified <paramref name="key"/>.
         /// </summary>
@@ -47,7 +56,7 @@ namespace DG.Common.Caching
         {
             lock (_locks.DefaultLock)
             {
-                _cache.Set(_cachePrefix + key, savedItem, _expiration.GetCacheEntryOptions());
+                _cache.Set(_cachePrefix + key, savedItem, _expiration.ConvertTo((s, a) => CreateOptions(s, a)));
             }
         }
 
@@ -72,7 +81,7 @@ namespace DG.Common.Caching
         /// <returns></returns>
         public T GetOrCreate(string key, Func<T> creationFunction)
         {
-            return _cache.GetOrCreate(_cachePrefix + key, (e) => creationFunction());
+            return _cache.GetOrCreate(_cachePrefix + key, (e) => creationFunction(), _expiration.ConvertTo((s, a) => CreateOptions(s, a)));
         }
 
         /// <summary>
