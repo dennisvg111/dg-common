@@ -1,10 +1,9 @@
-﻿using Microsoft.Extensions.Caching.Memory;
-using System;
+﻿using System;
 
 namespace DG.Common.Caching
 {
     /// <summary>
-    /// Defines the expiration policy for a <see cref="TypedCache{T}"/>.
+    /// Defines the expiration policy for a caching mechanism.
     /// </summary>
     public sealed class ExpirationPolicy
     {
@@ -27,7 +26,11 @@ namespace DG.Common.Caching
                 {
                     return ExpirationType.Absolute;
                 }
-                return ExpirationType.TimeOfDay;
+                if (_specificTimeOfDay.HasValue)
+                {
+                    return ExpirationType.TimeOfDay;
+                }
+                return ExpirationType.None;
             }
         }
 
@@ -39,24 +42,35 @@ namespace DG.Common.Caching
         }
 
         /// <summary>
-        /// Returns <see cref="MemoryCacheEntryOptions"/> as defined by this expiration.
+        /// Defines a method that creates a <typeparamref name="T"/> based on a given <paramref name="slidingExpiration"/> and <paramref name="absoluteExpiration"/>.
         /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="slidingExpiration"></param>
+        /// <param name="absoluteExpiration"></param>
+        /// <returns></returns>
+        public delegate T PolicyConverter<T>(TimeSpan? slidingExpiration, DateTimeOffset? absoluteExpiration);
+
+        /// <summary>
+        /// Converts this <see cref="ExpirationPolicy"/> to an instance of <typeparamref name="T"/>, using the given <paramref name="policyConverter"/>.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="policyConverter"></param>
         /// <returns></returns>
         /// <exception cref="NotImplementedException"></exception>
-        public MemoryCacheEntryOptions GetCacheEntryOptions()
+        public T ConvertTo<T>(PolicyConverter<T> policyConverter)
         {
-            switch (Type)
+            var expirationType = Type;
+            if (expirationType == ExpirationType.None)
+            {
+                return policyConverter(null, null);
+            }
+
+            switch (expirationType)
             {
                 case ExpirationType.Sliding:
-                    return new MemoryCacheEntryOptions()
-                    {
-                        SlidingExpiration = _slidingExpiration.Value
-                    };
+                    return policyConverter(_slidingExpiration.Value, null);
                 case ExpirationType.Absolute:
-                    return new MemoryCacheEntryOptions()
-                    {
-                        AbsoluteExpiration = DateTimeOffset.UtcNow + _maxSlidingExpiration.Value
-                    };
+                    return policyConverter(null, DateTimeOffset.UtcNow + _maxSlidingExpiration.Value);
                 case ExpirationType.TimeOfDay:
                     var currentDate = DateTime.Now;
                     var nextTimeHit = currentDate.Date + _specificTimeOfDay.Value;
@@ -64,12 +78,9 @@ namespace DG.Common.Caching
                     {
                         nextTimeHit = nextTimeHit.AddDays(1);
                     }
-                    return new MemoryCacheEntryOptions()
-                    {
-                        AbsoluteExpiration = DateTimeOffset.Now + (nextTimeHit - currentDate)
-                    };
+                    return policyConverter(null, DateTimeOffset.UtcNow + (nextTimeHit - currentDate));
                 default:
-                    throw new NotImplementedException($"Function {nameof(GetCacheEntryOptions)} has not been implemented for type {Type}.");
+                    throw new NotImplementedException($"Function {nameof(ConvertTo)} has not been implemented for policy type {Type}.");
             }
         }
 
@@ -119,7 +130,11 @@ namespace DG.Common.Caching
             /// <summary>
             /// Values should be evicted on a specific time of day.
             /// </summary>
-            TimeOfDay
+            TimeOfDay,
+            /// <summary>
+            /// Values should not be evicted.
+            /// </summary>
+            None
         }
     }
 }

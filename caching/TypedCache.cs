@@ -1,41 +1,53 @@
-﻿using DG.Common.Threading;
-using Microsoft.Extensions.Caching.Memory;
+﻿using Microsoft.Extensions.Caching.Memory;
 using System;
 
 namespace DG.Common.Caching
 {
     /// <summary>
     /// Provides an easy way to create a strongly typed cache of values.
-    /// <para></para>
-    /// Note that this cache is shared with other instances of <see cref="TypedCache{T}"/> with the same type <typeparamref name="T"/>, unless a specific <see cref="IMemoryCache"/> is given.
     /// </summary>
     /// <typeparam name="T"></typeparam>
     public sealed class TypedCache<T> where T : class
     {
-        private static readonly Lazy<IMemoryCache> _sharedCacheProvider = new Lazy<IMemoryCache>(() => new MemoryCache(new MemoryCacheOptions()));
-
         private readonly string _cachePrefix = $"TypedCache<{typeof(T).FullName}>";
 
         private readonly IMemoryCache _cache;
-        private readonly LockProvider _locks;
         private readonly ExpirationPolicy _expiration;
 
         /// <summary>
-        /// Initializes a new <see cref="TypedCache{T}"/>, with the given <see cref="ExpirationPolicy"/>, using the default shared <see cref="MemoryCache"/>.
+        /// Initializes a new <see cref="TypedCache{T}"/>, with the given <see cref="ExpirationPolicy"/>. Based on <paramref name="sharedOption"/> the cache will be shared with other instances for the given <typeparamref name="T"/>.
         /// </summary>
         /// <param name="expirationPolicy"></param>
-        public TypedCache(ExpirationPolicy expirationPolicy) : this(expirationPolicy, _sharedCacheProvider.Value) { }
+        /// <param name="sharedOption"></param>
+        public TypedCache(ExpirationPolicy expirationPolicy, CacheSharingOptions sharedOption = CacheSharingOptions.Unique)
+            : this(expirationPolicy, sharedOption == CacheSharingOptions.Shared ? CacheProvider.Shared<T>() : CacheProvider.CreateNewCache()) { }
 
         /// <summary>
-        /// Initializes a new <see cref="TypedCache{T}"/>, with the given <see cref="ExpirationPolicy"/>, and the given <see cref="MemoryCache"/>.
+        /// Initializes a new <see cref="TypedCache{T}"/>, with the given <see cref="ExpirationPolicy"/>, sharing a cache with others that used the same <paramref name="cacheName"/> and <typeparamref name="T"/>.
+        /// </summary>
+        /// <param name="expirationPolicy"></param>
+        /// <param name="cacheName"></param>
+        public TypedCache(ExpirationPolicy expirationPolicy, string cacheName)
+            : this(expirationPolicy, CacheProvider.Named<T>(cacheName)) { }
+
+        /// <summary>
+        /// Initializes a new <see cref="TypedCache{T}"/>, with the given <see cref="ExpirationPolicy"/>, and the given <see cref="IMemoryCache"/>.
         /// </summary>
         /// <param name="expirationPolicy"></param>
         /// <param name="cache"></param>
         public TypedCache(ExpirationPolicy expirationPolicy, IMemoryCache cache)
         {
             _cache = cache;
-            _locks = LockProvider.ByName(_cachePrefix);
             _expiration = expirationPolicy;
+        }
+
+        private static MemoryCacheEntryOptions CreateOptions(TimeSpan? slidingExpiration, DateTimeOffset? absoluteExpiration)
+        {
+            return new MemoryCacheEntryOptions()
+            {
+                SlidingExpiration = slidingExpiration,
+                AbsoluteExpiration = absoluteExpiration
+            };
         }
 
         /// <summary>
@@ -45,10 +57,7 @@ namespace DG.Common.Caching
         /// <param name="savedItem"></param>
         public void Save(string key, T savedItem)
         {
-            lock (_locks.DefaultLock)
-            {
-                _cache.Set(_cachePrefix + key, savedItem, _expiration.GetCacheEntryOptions());
-            }
+            _cache.Set(_cachePrefix + key, savedItem, _expiration.ConvertTo((s, a) => CreateOptions(s, a)));
         }
 
         /// <summary>
@@ -58,10 +67,7 @@ namespace DG.Common.Caching
         /// <returns></returns>
         public T Get(string key)
         {
-            lock (_locks.DefaultLock)
-            {
-                return _cache.Get<T>(_cachePrefix + key);
-            }
+            return _cache.Get<T>(_cachePrefix + key);
         }
 
         /// <summary>
@@ -72,7 +78,7 @@ namespace DG.Common.Caching
         /// <returns></returns>
         public T GetOrCreate(string key, Func<T> creationFunction)
         {
-            return _cache.GetOrCreate(_cachePrefix + key, (e) => creationFunction());
+            return _cache.GetOrCreate(_cachePrefix + key, (e) => creationFunction(), _expiration.ConvertTo((s, a) => CreateOptions(s, a)));
         }
 
         /// <summary>
