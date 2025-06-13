@@ -68,5 +68,17 @@ namespace DG.Common.Tests
 
             action.Should().NotThrow();
         }
+
+
+        [Fact]
+        public void Copy_ReturnsIdentical()
+        {
+            var uulsid = Uulsid.NewUulsid();
+
+            var copy = new Uulsid(uulsid);
+
+            uulsid.Equals(copy).Should().BeTrue();
+            Object.ReferenceEquals(uulsid, copy).Should().BeFalse();
+        }
     }
 }
