@@ -45,5 +45,40 @@ namespace DG.Common.Tests
 
             A.ToString().Should().BeLexographicallyLessThan(B.ToString());
         }
+
+        [Fact]
+        public void Equals_OtherNull_DoesNotThrow()
+        {
+            var uulsid = Uulsid.NewUulsid();
+
+            Action action = () => uulsid.Equals(null);
+
+            action.Should().NotThrow();
+        }
+
+        [Fact]
+        public void EqualsOperator_LeftNull_DoesNotThrow()
+        {
+            Uulsid uulsid = null;
+
+            Action action = () =>
+            {
+                var x = uulsid == Uulsid.Empty;
+            };
+
+            action.Should().NotThrow();
+        }
+
+
+        [Fact]
+        public void Copy_ReturnsIdentical()
+        {
+            var uulsid = Uulsid.NewUulsid();
+
+            var copy = new Uulsid(uulsid);
+
+            uulsid.Equals(copy).Should().BeTrue();
+            Object.ReferenceEquals(uulsid, copy).Should().BeFalse();
+        }
     }
 }
