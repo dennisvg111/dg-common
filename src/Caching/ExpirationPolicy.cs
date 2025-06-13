@@ -1,5 +1,5 @@
-﻿using System;
-using System.Runtime.Caching;
+﻿using Microsoft.Extensions.Caching.Memory;
+using System;
 
 namespace DG.Common.Caching
 {
@@ -39,21 +39,21 @@ namespace DG.Common.Caching
         }
 
         /// <summary>
-        /// Returns a <see cref="CacheItemPolicy"/> as defined by this expiration.
+        /// Returns <see cref="MemoryCacheEntryOptions"/> as defined by this expiration.
         /// </summary>
         /// <returns></returns>
         /// <exception cref="NotImplementedException"></exception>
-        public CacheItemPolicy GetPolicy()
+        public MemoryCacheEntryOptions GetCacheEntryOptions()
         {
             switch (Type)
             {
                 case ExpirationType.Sliding:
-                    return new CacheItemPolicy()
+                    return new MemoryCacheEntryOptions()
                     {
                         SlidingExpiration = _slidingExpiration.Value
                     };
                 case ExpirationType.Absolute:
-                    return new CacheItemPolicy()
+                    return new MemoryCacheEntryOptions()
                     {
                         AbsoluteExpiration = DateTimeOffset.UtcNow + _maxSlidingExpiration.Value
                     };
@@ -64,12 +64,12 @@ namespace DG.Common.Caching
                     {
                         nextTimeHit = nextTimeHit.AddDays(1);
                     }
-                    return new CacheItemPolicy()
+                    return new MemoryCacheEntryOptions()
                     {
                         AbsoluteExpiration = DateTimeOffset.Now + (nextTimeHit - currentDate)
                     };
                 default:
-                    throw new NotImplementedException($"Function {nameof(ExpirationPolicy.GetPolicy)} has not been implemented for type {Type}.");
+                    throw new NotImplementedException($"Function {nameof(GetCacheEntryOptions)} has not been implemented for type {Type}.");
             }
         }
 
