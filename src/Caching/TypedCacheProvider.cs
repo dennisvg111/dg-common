@@ -4,20 +4,20 @@ using System.Collections.Concurrent;
 namespace DG.Common.Caching
 {
     /// <summary>
-    /// Provides methods to get or create an instance of <see cref="ITypedCache{T}"/>, using a given <see cref="ICacheFactory"/>.
+    /// Provides methods to get or create an instance of <see cref="ITypedCache{T}"/>, using a given <see cref="ITypedCacheFactory"/>.
     /// </summary>
-    public class CacheProvider
+    public class TypedCacheProvider
     {
-        private readonly ICacheFactory _cacheFactory;
+        private readonly ITypedCacheFactory _cacheFactory;
 
         private readonly ConcurrentDictionary<Type, object> _sharedCaches = new ConcurrentDictionary<Type, object>();
         private readonly ConcurrentDictionary<Type, ConcurrentDictionary<string, object>> _namedCaches = new ConcurrentDictionary<Type, ConcurrentDictionary<string, object>>();
 
         /// <summary>
-        /// Creates a new instance of <see cref="CacheProvider"/> with the specified <paramref name="cacheFactory"/>.
+        /// Creates a new instance of <see cref="TypedCacheProvider"/> with the specified <paramref name="cacheFactory"/>.
         /// </summary>
         /// <param name="cacheFactory"></param>
-        public CacheProvider(ICacheFactory cacheFactory)
+        public TypedCacheProvider(ITypedCacheFactory cacheFactory)
         {
             _cacheFactory = cacheFactory;
         }

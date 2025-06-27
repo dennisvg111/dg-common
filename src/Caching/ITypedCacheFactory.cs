@@ -3,7 +3,7 @@
     /// <summary>
     /// Defines a factory that creates unique instances of <see cref="ITypedCache{T}"/>, that do not share their cache.
     /// </summary>
-    public interface ICacheFactory
+    public interface ITypedCacheFactory
     {
         /// <summary>
         /// Creates a new instance of <see cref="ITypedCache{T}"/> with the default options.
